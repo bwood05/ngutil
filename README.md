@@ -5,21 +5,27 @@ These scripts were written on and for CentOS 6.6. They make a lot of assumptions
 
 #create_site.sh options
  -n (required)
+ 
  FQDN of the site to be created e.g. subdomain.domain.tld.
 
  -a (optional)
+ 
  Actives the site by creating a symlink from sites-available to sites-enabled.
 
  -d (optional)
+ 
  Sets the decault document for the site.
 
  -s (optional)
+ 
  configures the site to use SSL -K and -C are required with this option.
 
  -C (required if -s is specified)
+ 
  location of the SSL certificate for the site.
 
  -K (required if -s is specified)
+ 
  location of the SSL key for the site.
 
 Examples
