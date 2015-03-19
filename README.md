@@ -23,6 +23,7 @@ These scripts were written on and for CentOS 6.6. They make a lot of assumptions
  location of the SSL key for the site.
 
 Examples
+
 ```sh create_site.sh -n subdomain.domain.tld```
 Creates the nginx and php-fpm config files for subdomain.domain.tld, but leaves it inactive.
 
