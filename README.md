@@ -31,13 +31,17 @@ These scripts were written on and for CentOS 6.6. They make a lot of assumptions
 Examples
 
 ```sh create_site.sh -n subdomain.domain.tld```
+
 Creates the nginx and php-fpm config files for subdomain.domain.tld, but leaves it inactive.
 
 ```sh create_site.sh -n subdomain.domain.tld -d index.php```
+
 Creates the nginx and php-fpm config files for subdomain.domain.tld, leaves it inactive, and sets the default document to index.php.
 
 ```sh create_site.sh -n subdomain.domain.tld -a```
+
 Creates the nginx and php-fpm config files for subdomain.domain.tld and activates it.
 
 ```sh create_site.sh -n subdomain.domain.tld -s -C ~\cert.crt -K ~\key.key```
+
 Creates the nginx and php-fpm config files for subdomain.domain.tld
