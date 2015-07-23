@@ -1,4 +1,6 @@
-# ngutil
+# ngutil python
+We are rewriting the porgram in Python.
+
 Scripts to help install and configure sites with nginx and php-fpm.
 
 These scripts were written on and for CentOS 6.6. They make a lot of assumptions so use at your own risk.
