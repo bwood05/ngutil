@@ -2,11 +2,20 @@ import os
 import sys
 import argparse
 
-class _NGUtilArgs(object):
+# Package version / root
+__version__ = '0.1-1'
+__root__    = os.path.abspath(os.path.dirname(__file__))
+
+# NGUtil Libraries
+from .common import _NGUtilCommon
+from .application import _NGUtilApp
+
+class _NGUtilArgs(_NGUtilCommon):
     """
     Class object for handling command line arguments.
     """
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super(_NGUtilArgs, self).__init__()
 
         # Arguments parser / object
         self.parser  = None
@@ -62,12 +71,18 @@ class _NGUtilArgs(object):
         # Return the value
         return _val if not use_json else json.dumps(_val)
 
-class NGUtil(object):
+class NGUtil(_NGUtilCommon):
     """
     Public class used when invoking 'ngutil'.
     """
-    def __init__(self):
-        self.args = _NGUtilArgs()
+    def __init__(self, **kwargs):
+        super(NGUtil, self).__init__()
+        
+        # Application manager
+        self.app    = _NGUtilApp()
+        
+        # Create the argument handler
+        self.args   = _NGUtilArgs(**kwargs)
     
         # SSL attributes
         self.ssl  = {
@@ -75,13 +90,6 @@ class NGUtil(object):
             'cert': None,
             'key': None
         }
-    
-    def _die(self, msg):
-        """
-        Print on stderr and die.
-        """
-        sys.stderr.write('%s\n' % msg)
-        sys.exit(1)
     
     def create_site(self):
         """
@@ -147,3 +155,10 @@ class NGUtil(object):
             
         # Run the action method
         mapper[action]()
+        
+def cli():
+    """
+    Entry point for running NGUtil from the command line.
+    """
+    _ngutil = NGUtil()
+    _ngutil.run()
