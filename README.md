@@ -1,9 +1,14 @@
-# ngutil python
-We are rewriting the porgram in Python.
+# Nginx Configuration Utility
+A Python module/command line utility to assist in setting up Nginx and configuring sites. Currently this utility is only supported on CentOS 6.x. Use at your own risk.
 
-Scripts to help install and configure sites with nginx and php-fpm.
-
-These scripts were written on and for CentOS 6.6. They make a lot of assumptions so use at your own risk.
+### Installation
+Installation requires an appropriate version of 'python-setuptools' and 'python-pip' for processing dependencies.
+```sh
+$ sudo yum install python-pip python-setuptools
+$ git clone -b python-dev https://github.com/bwood05/ngutil
+$ cd ngutil
+$ python setup.py install
+```
 
 #create_site.sh options
  -n (required)
