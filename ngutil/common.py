@@ -5,16 +5,19 @@ class _NGUtilCommon(object):
     """
     Common class for sharing methods and attributes between NGUtil classes.
     """
-    def __init__(self):
+    def __init__(self, is_cli):
+        
+        # Command line flag
+        self.is_cli = is_cli
         
         # Root / data directory
-        self._ROOT = path.abspath(path.dirname(__file__))
-        self._DATA = '{}/data'.format(self.ROOT)
+        self._ROOT  = path.abspath(path.dirname(__file__))
+        self._DATA  = '{}/data'.format(self.ROOT)
         
         # Template ID / file mappings
         self._TEMPLATES = {
             'FPM':      self._data_map('fpm.conf.template'),
-            'REPO':     self._data_map('nginx.repo.template'),
+            'NG_REPO':  self._data_map('nginx.repo.template'),
             'NG_CONF':  self._data_map('nginx.conf.template'),
             'NG_HTTP':  self._data_map('site.http.conf'),
             'NG_HTTPS': self._data_map('site.https.conf')
@@ -30,5 +33,8 @@ class _NGUtilCommon(object):
         """
         Print on stderr and die.
         """
-        stderr.write('{}\n'.format(msg))
-        exit(code)
+        if self.is_cli:
+            stderr.write('ERROR: {}\n'.format(msg))
+            exit(code)
+        else:
+            throw Exception(msg)

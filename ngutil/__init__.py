@@ -1,6 +1,9 @@
 import os
+import re
 import sys
 import argparse
+from getpass import getuser
+from platform import linux_distribution
 
 # Package version / root
 __version__ = '0.1-1'
@@ -75,8 +78,11 @@ class NGUtil(_NGUtilCommon):
     """
     Public class used when invoking 'ngutil'.
     """
-    def __init__(self, **kwargs):
-        super(NGUtil, self).__init__()
+    def __init__(self, is_cli=False, **kwargs):
+        super(NGUtil, self).__init__(is_cli)
+        
+        # Check effective user
+        self._check_user()
         
         # Application manager
         self.app    = _NGUtilApp()
@@ -91,6 +97,35 @@ class NGUtil(_NGUtilCommon):
             'key': None
         }
     
+    def _check_support(self):
+        """
+        Check if the current distribution/version is supported.
+        """
+        
+        # Supported distributions / versions
+        supported = {
+            'centos': ['6']    
+        }
+        
+        # Get the current distro / major version
+        this_distro  = linux_distribution()[0].lower()
+        this_version = re.compile(r'(^[0-9]+)\..*$').sub(r'\g<1>', linux_distribution[1])
+    
+        # Make sure the distribution is supported
+        if not this_distro in supported:
+            self.die('Current distribution \'{}\' not supported...'.format(this_distro))
+    
+        # Make sure the version is supported
+        if not this_version in supported[this_distro]:
+            self.die('Current version \'{}\' not supported for this distribution...'.format(this_version))
+    
+    def _check_user(self):
+        """
+        Make sure the module is being run as root.
+        """
+        if not getuser() == 'root':
+            self.die('ngutil must be run as root user...')
+    
     def create_site(self):
         """
         Create a new NGINX site.
@@ -103,7 +138,7 @@ class NGUtil(_NGUtilCommon):
         # Make sure all required arguments are set
         for k in required:
             if not self.args.get(k):
-                self._die('ERROR: Missing required argument \'{}\''.format(k))
+                self.die('Missing required argument \'{}\''.format(k))
         
         # If using SSL
         if self.args.get('ssl'):
@@ -112,12 +147,12 @@ class NGUtil(_NGUtilCommon):
             # Make sure the certificate and key are set
             for k in ['ssl_cert', 'ssl_key']:
                 if not self.args.get(k):
-                    self._die('ERROR: Missing required argument \'{}\', must supply to enable SSL'.format(k))
+                    self.die('Missing required argument \'{}\', must supply to enable SSL'.format(k))
                 
                 # Make sure the file exists
                 ssl_file = self.args.get(k)
                 if not os.path.isfile(ssl_file):
-                    self._die('ERROR: Could not locate \'{}\' file \'{}\''.format(k, ssl_file))
+                    self.die('Could not locate \'{}\' file \'{}\''.format(k, ssl_file))
             
             # Set the SSL key and certificate
             self.ssl['key'] = self.args.get('ssl_key')
@@ -127,7 +162,8 @@ class NGUtil(_NGUtilCommon):
         """
         Setup the NGINX server.
         """
-        return 
+        self.app.install()
+        self.app.config_firewall()
     
     def _action_mapper(self):
         """
@@ -151,7 +187,7 @@ class NGUtil(_NGUtilCommon):
         
         # Make sure the action is valid
         if not action in mapper:
-            self._die('ERROR: \'action\' argument must be one of: {}'.format(mapper.keys()))
+            self.die('\'action\' argument must be one of: {}'.format(mapper.keys()))
             
         # Run the action method
         mapper[action]()
@@ -160,5 +196,5 @@ def cli():
     """
     Entry point for running NGUtil from the command line.
     """
-    _ngutil = NGUtil()
+    _ngutil = NGUtil(is_cli=True)
     _ngutil.run()
