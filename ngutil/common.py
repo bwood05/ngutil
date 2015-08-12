@@ -59,8 +59,5 @@ class _NGUtilCommon(object):
         """
         Print on stderr and die.
         """
-        if self.is_cli:
-            stderr.write('ERROR: {0}\n'.format(msg))
-            exit(code)
-        else:
-            raise Exception(msg)
+        stderr.write('ERROR: {0}\n'.format(msg))
+        exit(code)
