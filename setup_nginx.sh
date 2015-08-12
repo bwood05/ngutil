@@ -25,9 +25,3 @@ install_nginx()
 	service iptables save
 	service iptables restart
 }
-
-setup_phpfpm()
-{
-	mkdir /etc/php-fpm.d/disabled
-	mv /etc/php-fpm.d/www.conf /etc/php-fpm.d/disabled
-}

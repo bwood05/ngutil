@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 # Get the module version
-from .ngutil import __version__
+from ngutil import __version__
 
 # Run the setup
 setup(

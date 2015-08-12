@@ -37,4 +37,4 @@ class _NGUtilCommon(object):
             stderr.write('ERROR: {}\n'.format(msg))
             exit(code)
         else:
-            throw Exception(msg)
+            raise Exception(msg)
