@@ -53,7 +53,7 @@ class _NGUtilTemplates(_NGUtilCommon):
         Set template substitution variables.
         """
         for k,v in kwargs.iteritems():
-            self.contents.replace('{{{{{0}}}}}'.format(k), v)
+            self.contents = self.contents.replace('{{{{{0}}}}}'.format(k), v)
             self.feedback.success('Updated template variable \'{0}\'-> {1}'.format(k,v))
             
     def deploy(self, owner='root', mode=644):
