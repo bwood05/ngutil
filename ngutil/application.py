@@ -1,8 +1,8 @@
+import sys
 import iptc
 import wget
 import shutil
 from os import path, unlink
-from yum import YumBase
 
 # NGUtil Libraries
 from .common import _NGUtilCommon
@@ -32,9 +32,6 @@ class _NGUtilApp(_NGUtilCommon):
         
         # Template manager
         self.template = _NGUtilTemplates()
-        
-        # YUM package manager
-        self.yum = YumBase()
         
     def _chkconfig(self, service, state='on'):
         """
@@ -192,19 +189,15 @@ class _NGUtilApp(_NGUtilCommon):
         
                 # Clean up the tmp package
                 unlink(attrs['local'])
+            else:
+                self.feedback.info('Repo provided by \'{0}\' already installed...'.format(attrs['upstream']))
         
-        # Search list / package name
-        searchlist = ['name']
-        arg        = ['nginx', 'policycoreutils-python', 'php56u']
+        # Packages to install
+        packages = ['nginx', 'policycoreutils-python', 'php56u']
+        self.feedback.info('Preparing to install packages: {0}'.format(' '.join(packages)))
         
-        # Look for the package
-        for (package, matched_value) in self.yum.searchGenerator(searchlist, arg):
-            self.feedback.info('Marking package {0} for installation'.format(package.name))
-            self.yum.install(package)
-                
-        # Complete the installation
-        self.yum.buildTransaction()
-        self.yum.processTransaction()
+        # Install the packages
+        self.run_command('yum install {0} -y'.format(' '.join(packages)), stdout=sys.stdout, stderr=sys.stderr)
         self.feedback.success('Installed all packages!')
             
         # Enable the services

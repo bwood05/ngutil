@@ -46,7 +46,7 @@ class _NGUtilCommon(object):
         if not path.isdir(dir):
             makedirs(dir)
         
-    def run_command(self, cmd, expects=0, shell=False):
+    def run_command(self, cmd, expects=0, shell=False, stdout=PIPE, stderr=PIPE):
         """
         Run a shell command with Popen
         """
@@ -56,7 +56,7 @@ class _NGUtilCommon(object):
             cmd = cmd.split(' ')
         
         # Open the process
-        proc = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=shell)
+        proc = Popen(cmd, stdout=stdout, stderr=stderr, shell=shell)
         out, err = proc.communicate()
         
         # Make sure the expected return code is found
