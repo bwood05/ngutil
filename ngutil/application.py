@@ -135,6 +135,31 @@ class _NGUtilApp(_NGUtilCommon):
         )
         self.template.deploy()
         
+    def _convert_https(self, config):
+        """
+        WORKAROUND METHOD
+        Convert 'https' to 'http' in repo config
+        """
+        
+        # Read the config
+        fh = open(attrs['config'], 'r')
+        config = fh.read()
+        fh.close()
+        
+        # Change to http
+        config.replace('https', 'http')
+        
+        # Write and close
+        fh = open(attrs['config'], 'w')
+        fh.write(config)
+        fh.close()
+        
+    def _bar_none(self, current, total, width=80):
+        """
+        Supress wget output.
+        """
+        return False
+        
     def install(self):
         """
         Make sure NGINX is installed.
@@ -149,15 +174,12 @@ class _NGUtilApp(_NGUtilCommon):
         else:
             self.feedback.info('NGINX repository \'{0}\' already exists, skipping...'.format(nginx_repo))
         
-        # Suppress wget output
-        def bar_none(current, total, width=80): return False
-        
         # Download / install each repo
         for repo, attrs in self.REPOS.iteritems():
             
             # Only install if the repo configuration hasn't been created
             if not path.isfile(attrs['config']):
-                wget.download(attrs['upstream'], out=attrs['local'], bar=bar_none)
+                wget.download(attrs['upstream'], out=attrs['local'], bar=self._bar_none)
                 self.feedback.success('Fetched repository package: {0} -> {1}'.format(attrs['upstream'], attrs['local']))
             
                 # Install the repository RPM
@@ -166,13 +188,7 @@ class _NGUtilApp(_NGUtilCommon):
         
                 # WORKAROUND
                 # Can't access 'https' mirrors, so convert to 'http'
-                fh = open(attrs['config'], 'r')
-                config = fh.read()
-                fh.close()
-                config.replace('https', 'http')
-                fh = open(attrs['config'], 'w')
-                fh.write(config)
-                fh.close()
+                self._convert_https(attrs['config'])
         
                 # Clean up the tmp package
                 unlink(attrs['local'])
