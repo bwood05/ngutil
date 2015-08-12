@@ -26,6 +26,7 @@ class _NGUtilApp(_NGUtilCommon):
         Enable the service in chkconfig.
         """
         self.run_command('chkconfig {0} {1}'.format(service, state))
+        self.feedback.success('Enabled service {0} -> {1}'.format(service, state))
         
     def _iptables_save(self, restart=True):
         """
@@ -34,10 +35,12 @@ class _NGUtilApp(_NGUtilCommon):
         
         # Save the iptables config
         self.run_command('service iptables save')
+        self.feedback.success('Saved iptables rules...')
             
         # If restarting
         if restart:
             self.run_command('service iptables restart')
+            self.feedback.success('Restarted iptables service...')
         
     def config_firewall(self, rules):
         """
@@ -75,6 +78,15 @@ class _NGUtilApp(_NGUtilCommon):
                 # Add match parameters and append to chain
                 rule.add_match(match)
                 chain.insert_rule(rule)
+                self.feedback.success('Appended rule to chain \'{0}\': proto={1}, state={2}, dport={3}, target={4}'.format(
+                    new_rule.get('chain'),
+                    new_rule.get('proto'),
+                    new_rule.get('state'),
+                    str(new_rule.get('dport')),
+                    new_rule.get('target')
+                ))
+            else:
+                self.feedback.info('Firewall rule matching port {0} exists, skipping...'.format(str(new_rule.get('dport'))))
                 
         # Save the iptables config
         self._iptables_save()
@@ -85,6 +97,7 @@ class _NGUtilApp(_NGUtilCommon):
         """
         self.mkdir('/etc/php-fpm.d/disabled')
         shutil.move('/etc/php-fpm.d/www.conf', '/etc/php-fpm.d/disabled/www.conf')
+        self.feedback.success('Configured PHP-FPM')
         
     def _config_nginx(self):
         """
@@ -115,8 +128,11 @@ class _NGUtilApp(_NGUtilCommon):
         # Add the NGINX repository
         nginx_repo = '/etc/yum.repos.d/nginx.repo'
         if not path.isfile(nginx_repo):
-            repo = self.template.setup('NG_REPO', nginx_repo)
-            repo.deploy()
+            self.feedback.info('Preparing to configure NGINX repository \'{0}\''.format(nginx_repo))
+            self.template.setup('NG_REPO', nginx_repo)
+            self.template.deploy()
+        else:
+            self.feedback.info('NGINX repository \'{0}\' already exists, skipping...'.format(nginx_repo))
         
         # Download / install each repo
         for repo, attrs in {
@@ -135,9 +151,11 @@ class _NGUtilApp(_NGUtilCommon):
             # Only install if the repo configuration hasn't been created
             if not path.isfile(attrs['config']):
                 wget.download(attrs['upstream'], out=attrs['local'])
+                self.feedback.success('Fetched repository package: {0} -> {1}'.format(attrs['upstream'], attrs['local']))
             
                 # Install the repository RPM
                 self.run_command('rpm -Uvh {0}'.format(attrs['local']))
+                self.feedback.success('Installed repository package: {0}'.format(attrs['local']))
         
         # Search list / package name
         searchlist = ['name']
@@ -145,11 +163,13 @@ class _NGUtilApp(_NGUtilCommon):
         
         # Look for the package
         for (package, matched_value) in self.yum.searchGenerator(searchlist, arg):
+            self.feedback.info('Marking package {0} for installation'.format(package.name))
             self.yum.install(package)
                 
         # Complete the installation
         self.yum.buildTransaction()
         self.yum.processTransaction()
+        self.feedback.success('Installed all packages!')
             
         # Enable the services
         self.chkconfig('nginx')

@@ -29,6 +29,7 @@ class _NGUtilTemplates(_NGUtilCommon):
         # Make sure the directory exists
         if not path.isdir(target_dir):
             makedirs(target_dir)
+            self.feedback.success('Created path -> {0}'.format(target_dir))
         
     def setup(self, template_id, target_file):
         """
@@ -36,6 +37,7 @@ class _NGUtilTemplates(_NGUtilCommon):
         """
         if not template_id in self._TEMPLATES:
             self.die('Invalid template ID: {0}'.format(template_id))
+        self.feedback.info('Preparing to deploy \'{0}\' template to: {1}'.format(template_id, target_file))
             
         # Set the active template
         self.active = template_id
@@ -52,6 +54,7 @@ class _NGUtilTemplates(_NGUtilCommon):
         """
         for k,v in kwargs.iteritems():
             self.contents.replace('{{{{{0}}}}}'.format(k), v)
+            self.feedback.success('Updated template variable \'{0}\'-> {1}'.format(k,v))
             
     def deploy(self, owner='root', mode=644):
         """
@@ -71,3 +74,4 @@ class _NGUtilTemplates(_NGUtilCommon):
         # Set permissions
         chown(self.target, getpwnam(owner).pw_uid, getpwnam(owner).pw_gid)
         chmod(self.target, mode)
+        self.feedback.success('Deployed template -> {0}'.format(self.target))

@@ -162,6 +162,7 @@ class NGUtil(_NGUtilCommon):
         """
         Setup the NGINX server.
         """
+        self.feedback.info('Preparing to setup NGINX...')
         
         # Install required software
         self.app.install()
@@ -201,8 +202,6 @@ class NGUtil(_NGUtilCommon):
         # Target action / action mapper
         action = self.args.get('action')
         mapper = self._action_mapper()
-        
-        print self.args.list()
         
         # Make sure the action is valid
         if not action in mapper:

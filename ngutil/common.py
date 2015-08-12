@@ -1,6 +1,7 @@
 from os import path, makedirs
 from sys import exit, stderr
 from subprocess import Popen, PIPE
+from feedback import Feedback
 
 from ngutil import __root__
 
@@ -9,6 +10,9 @@ class _NGUtilCommon(object):
     Common class for sharing methods and attributes between NGUtil classes.
     """
     def __init__(self):
+        
+        # Feedback handler
+        self.feedback = Feedback(use_timestamp=True)
         
         # Data directory
         self._DATA  = '{0}/data'.format(__root__)
@@ -21,6 +25,13 @@ class _NGUtilCommon(object):
             'NG_HTTP':  self._data_map('site.http.conf'),
             'NG_HTTPS': self._data_map('site.https.conf')
         }
+        
+    def die(self, msg, code=1):
+        """
+        Print on stderr and die.
+        """
+        self.feedback.error(msg)
+        exit(code)
         
     def _data_map(self, FILE):
         """
@@ -54,10 +65,3 @@ class _NGUtilCommon(object):
             
         # Return exit code / stdout / stderr
         return proc.return_code, out, err
-        
-    def die(self, msg, code=1):
-        """
-        Print on stderr and die.
-        """
-        stderr.write('ERROR: {0}\n'.format(msg))
-        exit(code)
