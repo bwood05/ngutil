@@ -45,6 +45,7 @@ class _NGUtilCommon(object):
         """
         if not path.isdir(dir):
             makedirs(dir)
+            self.feedback.success('Created directory: {0}'.format(dir))
         
     def run_command(self, cmd, expects=0, shell=False, stdout=PIPE, stderr=PIPE):
         """
