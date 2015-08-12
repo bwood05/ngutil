@@ -147,11 +147,11 @@ class _NGUtilApp(_NGUtilCommon):
         fh.close()
         
         # Change to http
-        _config.replace('https', 'http')
+        _fixed = _config.replace('https', 'http')
         
         # Write and close
         fh = open(config, 'w')
-        fh.write(_config)
+        fh.write(_fixed)
         fh.close()
         
     def _bar_none(self, current, total, width=80):
