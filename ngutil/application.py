@@ -201,8 +201,8 @@ class _NGUtilApp(_NGUtilCommon):
         self.feedback.success('Installed all packages!')
             
         # Enable the services
-        self.chkconfig('nginx')
-        self.chkconfig('php-fpm')
+        self._chkconfig('nginx')
+        self._chkconfig('php-fpm')
         
         # Make any required directories
         for dir in [
