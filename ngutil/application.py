@@ -211,3 +211,7 @@ class _NGUtilApp(_NGUtilCommon):
             '/srv/www'
         ]:
             self.mkdir(dir)
+            
+        # Configure NGINX and PHP-FPM
+        self._config_nginx()
+        self._config_phpfpm()
