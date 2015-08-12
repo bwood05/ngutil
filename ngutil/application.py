@@ -124,6 +124,8 @@ class _NGUtilApp(_NGUtilCommon):
         """
         Make sure NGINX is installed.
         """
+        def bar_none(current, total, width=80):
+            return False
         
         # Add the NGINX repository
         nginx_repo = '/etc/yum.repos.d/nginx.repo'
@@ -144,13 +146,13 @@ class _NGUtilApp(_NGUtilCommon):
             'ius': {
                 'config': '/etc/yum.repos.d/ius.repo',
                 'local': '/tmp/ius.rpm',
-                'upstream': 'http://dl.iuscommunity.org/pub/ius/stable/CentOS/6/x86_64/ius-release-1.0-13.ius.centos6.noarch.rpm'
+                'upstream': 'https://dl.iuscommunity.org/pub/ius/stable/CentOS/6/x86_64/ius-release-1.0-14.ius.centos6.noarch.rpm'
             }
         }.iteritems():
             
             # Only install if the repo configuration hasn't been created
             if not path.isfile(attrs['config']):
-                wget.download(attrs['upstream'], out=attrs['local'])
+                wget.download(attrs['upstream'], out=attrs['local'], bar=bar_none)
                 self.feedback.success('Fetched repository package: {0} -> {1}'.format(attrs['upstream'], attrs['local']))
             
                 # Install the repository RPM

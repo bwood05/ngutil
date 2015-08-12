@@ -2,7 +2,6 @@ import os
 import re
 import sys
 import argparse
-from getpass import getuser
 from platform import linux_distribution
 
 # Package version / root
@@ -123,7 +122,7 @@ class NGUtil(_NGUtilCommon):
         """
         Make sure the module is being run as root.
         """
-        if not getuser() == 'root':
+        if not os.geteuid() == 0:
             self.die('ngutil must be run as root user...')
     
     def create_site(self):

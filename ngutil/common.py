@@ -60,8 +60,8 @@ class _NGUtilCommon(object):
         out, err = proc.communicate()
         
         # Make sure the expected return code is found
-        if not proc.return_code == expects:
-            self.die('Failed to run command \'{0}\', ERROR={1}'.format(' '.join(cmd), err.readlines()))
+        if not proc.returncode == expects:
+            self.die('Failed to run command \'{0}\', ERROR={1}'.format(' '.join(cmd), err))
             
         # Return exit code / stdout / stderr
-        return proc.return_code, out, err
+        return proc.returncode, out, err
