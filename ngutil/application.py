@@ -1,7 +1,7 @@
 import iptc
 import wget
 import shutil
-from os import path
+from os import path, unlink
 from yum import YumBase
 
 # NGUtil Libraries
@@ -139,8 +139,6 @@ class _NGUtilApp(_NGUtilCommon):
         """
         Make sure NGINX is installed.
         """
-        def bar_none(current, total, width=80):
-            return False
         
         # Add the NGINX repository
         nginx_repo = '/etc/yum.repos.d/nginx.repo'
@@ -150,6 +148,9 @@ class _NGUtilApp(_NGUtilCommon):
             self.template.deploy()
         else:
             self.feedback.info('NGINX repository \'{0}\' already exists, skipping...'.format(nginx_repo))
+        
+        # Suppress wget output
+        def bar_none(current, total, width=80): return False
         
         # Download / install each repo
         for repo, attrs in self.REPOS.iteritems():
@@ -162,6 +163,9 @@ class _NGUtilApp(_NGUtilCommon):
                 # Install the repository RPM
                 self.run_command('rpm -Uvh {0}'.format(attrs['local']))
                 self.feedback.success('Installed repository package: {0}'.format(attrs['local']))
+        
+                # Clean up the tmp package
+                unlink(attrs['local'])
         
         # Search list / package name
         searchlist = ['name']
