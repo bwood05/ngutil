@@ -164,6 +164,16 @@ class _NGUtilApp(_NGUtilCommon):
                 self.run_command('rpm -Uvh {0}'.format(attrs['local']))
                 self.feedback.success('Installed repository package: {0}'.format(attrs['local']))
         
+                # WORKAROUND
+                # Can't access 'https' mirrors, so convert to 'http'
+                fh = open(attrs['config'], 'r')
+                config = fh.read()
+                fh.close()
+                config.replace('https', 'http')
+                fh = open(attrs['config'], 'w')
+                fh.write(config)
+                fh.close()
+        
                 # Clean up the tmp package
                 unlink(attrs['local'])
         
