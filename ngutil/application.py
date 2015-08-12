@@ -142,16 +142,16 @@ class _NGUtilApp(_NGUtilCommon):
         """
         
         # Read the config
-        fh = open(attrs['config'], 'r')
-        config = fh.read()
+        fh = open(config, 'r')
+        _config = fh.read()
         fh.close()
         
         # Change to http
-        config.replace('https', 'http')
+        _config.replace('https', 'http')
         
         # Write and close
-        fh = open(attrs['config'], 'w')
-        fh.write(config)
+        fh = open(config, 'w')
+        fh.write(_config)
         fh.close()
         
     def _bar_none(self, current, total, width=80):
