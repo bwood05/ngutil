@@ -12,6 +12,21 @@ class _NGUtilApp(_NGUtilCommon):
     """
     Class object for handling setting up the NGINX application.
     """
+    
+    # Additional repositories
+    REPOS = {
+        'epel': {
+            'config': '/etc/yum.repos.d/epel.repo',
+            'local': '/tmp/epel.rpm',
+            'upstream': 'http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm'
+        },
+        'ius': {
+            'config': '/etc/yum.repos.d/ius.repo',
+            'local': '/tmp/ius.rpm',
+            'upstream': 'https://dl.iuscommunity.org/pub/ius/stable/CentOS/6/x86_64/ius-release-1.0-14.ius.centos6.noarch.rpm'
+        }
+    }
+    
     def __init__(self):
         super(_NGUtilApp, self).__init__()
         
@@ -137,18 +152,7 @@ class _NGUtilApp(_NGUtilCommon):
             self.feedback.info('NGINX repository \'{0}\' already exists, skipping...'.format(nginx_repo))
         
         # Download / install each repo
-        for repo, attrs in {
-            'epel': {
-                'config': '/etc/yum.repos.d/epel.repo',
-                'local': '/tmp/epel.rpm',
-                'upstream': 'http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm'
-            },
-            'ius': {
-                'config': '/etc/yum.repos.d/ius.repo',
-                'local': '/tmp/ius.rpm',
-                'upstream': 'https://dl.iuscommunity.org/pub/ius/stable/CentOS/6/x86_64/ius-release-1.0-14.ius.centos6.noarch.rpm'
-            }
-        }.iteritems():
+        for repo, attrs in self.REPOS.iteritems():
             
             # Only install if the repo configuration hasn't been created
             if not path.isfile(attrs['config']):
