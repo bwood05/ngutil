@@ -35,7 +35,7 @@ class _NGUtilTemplates(_NGUtilCommon):
         Select a template to use for further processing.
         """
         if not template_id in self._TEMPLATES:
-            throw Exception('Invalid template ID: {}'.format(template_id))
+            self.die('Invalid template ID: {0}'.format(template_id))
             
         # Set the active template
         self.active = template_id
@@ -58,7 +58,7 @@ class _NGUtilTemplates(_NGUtilCommon):
         Deploy the template file.
         """
         if path.isfile(self.target):
-            self.die('Cannot deploy template file, target \'{}\' already exists.'.format(self.target))
+            self.die('Cannot deploy template file, target \'{0}\' already exists.'.format(self.target))
             
         # Make sure the path to the file exists
         self._mkpath(self.target)

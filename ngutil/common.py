@@ -2,18 +2,16 @@ from os import path, makedirs
 from sys import exit, stderr
 from subprocess import Popen, PIPE
 
+from ngutil import __root__
+
 class _NGUtilCommon(object):
     """
     Common class for sharing methods and attributes between NGUtil classes.
     """
-    def __init__(self, is_cli):
+    def __init__(self):
         
-        # Command line flag
-        self.is_cli = is_cli
-        
-        # Root / data directory
-        self._ROOT  = path.abspath(path.dirname(__file__))
-        self._DATA  = '{}/data'.format(self.ROOT)
+        # Data directory
+        self._DATA  = '{0}/data'.format(__root__)
         
         # Template ID / file mappings
         self._TEMPLATES = {
@@ -28,7 +26,7 @@ class _NGUtilCommon(object):
         """
         Map a file to the data directory.
         """
-        return '{}/{}'.format(self._DATA, FILE)
+        return '{0}/{1}'.format(self._DATA, FILE)
         
     def mkdir(self, dir):
         """
@@ -52,7 +50,7 @@ class _NGUtilCommon(object):
         
         # Make sure the expected return code is found
         if not proc.return_code == expects:
-            self.die('Failed to run command \'{}\', ERROR={}'.format(' '.join(cmd), err.readlines()))
+            self.die('Failed to run command \'{0}\', ERROR={1}'.format(' '.join(cmd), err.readlines()))
             
         # Return exit code / stdout / stderr
         return proc.return_code, out, err
@@ -62,7 +60,7 @@ class _NGUtilCommon(object):
         Print on stderr and die.
         """
         if self.is_cli:
-            stderr.write('ERROR: {}\n'.format(msg))
+            stderr.write('ERROR: {0}\n'.format(msg))
             exit(code)
         else:
             raise Exception(msg)

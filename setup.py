@@ -33,5 +33,6 @@ setup(
         'Topic :: System :: Systems Administration',
         'Topic :: System :: Shells',
         'Topic :: Internet :: WWW/HTTP :: Site Management'
-    ]
+    ],
+    include_package_data = True
 )

@@ -25,7 +25,7 @@ class _NGUtilApp(_NGUtilCommon):
         """
         Enable the service in chkconfig.
         """
-        self.run_command('chkconfig {} {}'.format(service, state))
+        self.run_command('chkconfig {0} {1}'.format(service, state))
         
     def _iptables_save(self, restart=True):
         """
@@ -126,7 +126,7 @@ class _NGUtilApp(_NGUtilCommon):
                 'upstream': 'http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm'
             },
             'ius': {
-                'config': '/etc/yum.repos.d/ius.repo'
+                'config': '/etc/yum.repos.d/ius.repo',
                 'local': '/tmp/ius.rpm',
                 'upstream': 'http://dl.iuscommunity.org/pub/ius/stable/CentOS/6/x86_64/ius-release-1.0-13.ius.centos6.noarch.rpm'
             }
@@ -137,7 +137,7 @@ class _NGUtilApp(_NGUtilCommon):
                 wget.download(attrs['upstream'], out=attrs['local'])
             
                 # Install the repository RPM
-                self.run_command('rpm -Uvh {}'.format(attrs['local']))
+                self.run_command('rpm -Uvh {0}'.format(attrs['local']))
         
         # Search list / package name
         searchlist = ['name']

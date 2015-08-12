@@ -1,2 +1,2 @@
 include DESCRIPTION.rst
-include data/*.template
+include data/*

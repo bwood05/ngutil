@@ -78,8 +78,8 @@ class NGUtil(_NGUtilCommon):
     """
     Public class used when invoking 'ngutil'.
     """
-    def __init__(self, is_cli=False, **kwargs):
-        super(NGUtil, self).__init__(is_cli)
+    def __init__(self, **kwargs):
+        super(NGUtil, self).__init__()
         
         # Check effective user
         self._check_user()
@@ -113,11 +113,11 @@ class NGUtil(_NGUtilCommon):
     
         # Make sure the distribution is supported
         if not this_distro in supported:
-            self.die('Current distribution \'{}\' not supported...'.format(this_distro))
+            self.die('Current distribution \'{0}\' not supported...'.format(this_distro))
     
         # Make sure the version is supported
         if not this_version in supported[this_distro]:
-            self.die('Current version \'{}\' not supported for this distribution...'.format(this_version))
+            self.die('Current version \'{0}\' not supported for this distribution...'.format(this_version))
     
     def _check_user(self):
         """
@@ -138,7 +138,7 @@ class NGUtil(_NGUtilCommon):
         # Make sure all required arguments are set
         for k in required:
             if not self.args.get(k):
-                self.die('Missing required argument \'{}\''.format(k))
+                self.die('Missing required argument \'{0}\''.format(k))
         
         # If using SSL
         if self.args.get('ssl'):
@@ -147,12 +147,12 @@ class NGUtil(_NGUtilCommon):
             # Make sure the certificate and key are set
             for k in ['ssl_cert', 'ssl_key']:
                 if not self.args.get(k):
-                    self.die('Missing required argument \'{}\', must supply to enable SSL'.format(k))
+                    self.die('Missing required argument \'{0}\', must supply to enable SSL'.format(k))
                 
                 # Make sure the file exists
                 ssl_file = self.args.get(k)
                 if not os.path.isfile(ssl_file):
-                    self.die('Could not locate \'{}\' file \'{}\''.format(k, ssl_file))
+                    self.die('Could not locate \'{0}\' file \'{1}\''.format(k, ssl_file))
             
             # Set the SSL key and certificate
             self.ssl['key'] = self.args.get('ssl_key')
@@ -206,7 +206,7 @@ class NGUtil(_NGUtilCommon):
         
         # Make sure the action is valid
         if not action in mapper:
-            self.die('\'action\' argument must be one of: {}'.format(mapper.keys()))
+            self.die('\'action\' argument must be one of: {0}'.format(mapper.keys()))
             
         # Run the action method
         mapper[action]()
@@ -215,5 +215,5 @@ def cli():
     """
     Entry point for running NGUtil from the command line.
     """
-    _ngutil = NGUtil(is_cli=True)
+    _ngutil = NGUtil()
     _ngutil.run()
