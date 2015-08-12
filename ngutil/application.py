@@ -3,7 +3,6 @@ import wget
 import shutil
 from os import path
 from yum import YumBase
-from subprocess import Popen, PIPE
 
 # NGUtil Libraries
 from .common import _NGUtilCommon
@@ -22,38 +21,69 @@ class _NGUtilApp(_NGUtilCommon):
         # YUM package manager
         self.yum = YumBase()
         
-    def _chkconfig(self, service, state='on')
+    def _chkconfig(self, service, state='on'):
         """
         Enable the service in chkconfig.
         """
-        proc = Popen(['chkconfig', service, state], stdout=PIPE, stderr=PIPE)
-        proc.communicate()
+        self.run_command('chkconfig {} {}'.format(service, state))
         
-    def _mkdir(self, dir):
+    def _iptables_save(self, restart=True):
         """
-        Make directory if it doesn't exist.
+        Save and optionally restart iptables.
         """
-        if not path.isdir(dir):
-            makedirs(dir)
         
-    def config_firewall(self, ports=(80, 443)):
+        # Save the iptables config
+        self.run_command('service iptables save')
+            
+        # If restarting
+        if restart:
+            self.run_command('service iptables restart')
+        
+    def config_firewall(self, rules):
         """
         Setup the firewall for HTTP/HTTPS access
         """
         
-        # Load the firewall table and select the INPUT chain
-        table = iptc.Table(iptc.Table.FILTER)
-        chain = iptc.Chain(table, "INPUT")
-        
-        # Check if the rule already exists
-        for rule in chain.rules:
-            print rule
+        # Configure each rule
+        for new_rule in rules:
+            
+            # Target chain / config flag
+            chain  = iptc.Chain(iptc.Table(iptc.Table.FILTER), new_rule.get('chain', 'INPUT'))  
+            config = True
+            
+            # Look at existing rules
+            for rule in chain.rules:
+                for match in rule.matches:
+                    
+                    # Port already configured
+                    if int(match.dport) == new_rule.dport:
+                        config = False
+                        
+            # If configuring the new rule
+            if config:
+                
+                # Setup the firewall rule
+                rule          = iptc.Rule()
+                rule.protocol = new_rule.get('proto')
+                rule.target   = iptc.Target(rule, new_rule.get('target'))
+                
+                # Define rule match parameters
+                match         = iptc.Match(rule, "state")
+                match.state   = new_rule.get('state')
+                match.dport   = str(new_rule.get('dport'))
+                
+                # Add match parameters and append to chain
+                rule.add_match(match)
+                chain.insert_rule(rule)
+                
+        # Save the iptables config
+        self._iptables_save()
         
     def _config_phpfpm(self):
         """
         Configuration steps for PHP-FPM.
         """
-        self._mkdir('/etc/php-fpm.d/disabled')
+        self.mkdir('/etc/php-fpm.d/disabled')
         shutil.move('/etc/php-fpm.d/www.conf', '/etc/php-fpm.d/disabled/www.conf')
         
     def _config_nginx(self):
@@ -62,14 +92,12 @@ class _NGUtilApp(_NGUtilCommon):
         """
         
         # Get the number of processers
-        wp_proc = Popen(['grep', 'processor', '/proc/cpuinfo'], stdout=PIPE)
-        wp_proc.communicate()
-        _WORKERPROCESSES = len(wp_proc.stdout.readlines())
+        exit_code, stdout, stderr = self.run_command('grep processor /proc/cpuinfo')
+        _WORKERPROCESSES = len(stdout.readlines())
         
         # Get system ulimit
-        wc_proc = Popen('ulimit', '-n', shell=True, stdout=PIPE)
-        wc_proc.communicate()
-        _WORKERCONNECTION = wc_proc.stdout.readlines()[0].rstrip()
+        exit_code, stdout, stderr = self.run_command('ulimit -n', shell=True)
+        _WORKERCONNECTION = stdout.readlines()[0].rstrip()
         
         # Setup the template
         self.template.setup('NG_CONFIG', '/etc/nginx/nginx.conf')
@@ -109,11 +137,7 @@ class _NGUtilApp(_NGUtilCommon):
                 wget.download(attrs['upstream'], out=attrs['local'])
             
                 # Install the repository RPM
-                proc = Popen(['rpm', '-Uvh', attrs['local']], stdout=PIPE, stderr=PIPE)
-                
-                # Make sure installation was successfull
-                if proc.return_code != 0:
-                    self.die('Failed to install \'{}\' repository: {}'.format(repo, proc.stderr.readlines()))
+                self.run_command('rpm -Uvh {}'.format(attrs['local']))
         
         # Search list / package name
         searchlist = ['name']
@@ -123,9 +147,9 @@ class _NGUtilApp(_NGUtilCommon):
         for (package, matched_value) in self.yum.searchGenerator(searchlist, arg):
             self.yum.install(package)
                 
-            # Complete the installation
-            self.yum.buildTransaction()
-            self.yum.processTransaction()
+        # Complete the installation
+        self.yum.buildTransaction()
+        self.yum.processTransaction()
             
         # Enable the services
         self.chkconfig('nginx')
@@ -137,4 +161,4 @@ class _NGUtilApp(_NGUtilCommon):
             '/etc/nginx/sites-enabled',
             '/srv/www'
         ]:
-            self._mkdir(dir)
+            self.mkdir(dir)

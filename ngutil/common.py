@@ -1,5 +1,6 @@
-from os import path
+from os import path, makedirs
 from sys import exit, stderr
+from subprocess import Popen, PIPE
 
 class _NGUtilCommon(object):
     """
@@ -28,6 +29,33 @@ class _NGUtilCommon(object):
         Map a file to the data directory.
         """
         return '{}/{}'.format(self._DATA, FILE)
+        
+    def mkdir(self, dir):
+        """
+        Make directory if it doesn't exist.
+        """
+        if not path.isdir(dir):
+            makedirs(dir)
+        
+    def run_command(self, cmd, expects=0, shell=False):
+        """
+        Run a shell command with Popen
+        """
+        
+        # If the command argument is a string
+        if isinstance(cmd, str):
+            cmd = cmd.split(' ')
+        
+        # Open the process
+        proc = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=shell)
+        out, err = proc.communicate()
+        
+        # Make sure the expected return code is found
+        if not proc.return_code == expects:
+            self.die('Failed to run command \'{}\', ERROR={}'.format(' '.join(cmd), err.readlines()))
+            
+        # Return exit code / stdout / stderr
+        return proc.return_code, out, err
         
     def die(self, msg, code=1):
         """

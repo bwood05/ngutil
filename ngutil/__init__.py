@@ -162,8 +162,27 @@ class NGUtil(_NGUtilCommon):
         """
         Setup the NGINX server.
         """
+        
+        # Install required software
         self.app.install()
-        self.app.config_firewall()
+        
+        # Setup the firewall
+        self.app.config_firewall([
+            {
+                'chain':  'INPUT',
+                'proto':  'tcp',
+                'dport':  80,
+                'state':  'NEW',
+                'target': 'ACCEPT'
+            },
+            {
+                'chain':  'INPUT',
+                'proto':  'tcp',
+                'dport':  443,
+                'state':  'NEW',
+                'target': 'ACCEPT'   
+            }
+        ])
     
     def _action_mapper(self):
         """
