@@ -16,7 +16,7 @@ setup(
     license          = 'GPLv3',
     packages         = find_packages(),
     keywords         = 'web nginx virtual host http configuration',
-    install_requires = ['python-iptables', 'wget', 'feedback'],
+    install_requires = ['wget', 'feedback'],
     entry_points     = {
           'console_scripts': [
               'ngutil = ngutil:cli'
