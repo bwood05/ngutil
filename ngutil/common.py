@@ -46,6 +46,8 @@ class _NGUtilCommon(object):
         if not path.isdir(dir):
             makedirs(dir)
             self.feedback.success('Created directory: {0}'.format(dir))
+        else:
+            self.feedback.info('Directory \'{0}\' already exists, skipping...'.format(dir))
         
     def run_command(self, cmd, expects=0, shell=False, stdout=PIPE, stderr=PIPE):
         """
@@ -57,12 +59,15 @@ class _NGUtilCommon(object):
             cmd = cmd.split(' ')
         
         # Open the process
-        proc = Popen(cmd, stdout=stdout, stderr=stderr, shell=shell)
-        out, err = proc.communicate()
-        
-        # Make sure the expected return code is found
-        if not proc.returncode == expects:
-            self.die('Failed to run command \'{0}\', ERROR={1}'.format(' '.join(cmd), err))
+        try:
+            proc = Popen(cmd, stdout=stdout, stderr=stderr, shell=shell)
+            out, err = proc.communicate()
             
-        # Return exit code / stdout / stderr
-        return proc.returncode, out, err
+            # Make sure the expected return code is found
+            if not proc.returncode == expects:
+                self.die('Failed to run command \'{0}\', ERROR={1}'.format(str(cmd), err))
+                
+            # Return exit code / stdout / stderr
+            return proc.returncode, out, err
+        except Exception as e:
+            self.die('Failed to run command \'{0}\': ERROR={1}'.format(str(cmd), str(e)))

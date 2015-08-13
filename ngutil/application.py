@@ -1,12 +1,18 @@
 import sys
-import iptc
 import wget
 import shutil
 from os import path, unlink
 
+# RPM module
+try:
+    import rpm
+except:
+    pass
+
 # NGUtil Libraries
 from .common import _NGUtilCommon
 from .template import _NGUtilTemplates
+from .iptables import _NGUtilIPTables
 
 class _NGUtilApp(_NGUtilCommon):
     """
@@ -32,6 +38,9 @@ class _NGUtilApp(_NGUtilCommon):
         
         # Template manager
         self.template = _NGUtilTemplates()
+        
+        # Installed packages
+        self.packages = ['nginx', 'policycoreutils-python', 'php56u', 'php56u-fpm']
         
     def _chkconfig(self, service, state='on'):
         """
@@ -59,56 +68,25 @@ class _NGUtilApp(_NGUtilCommon):
         Setup the firewall for HTTP/HTTPS access
         """
         
+        # Create the iptables manager
+        iptables = _NGUtilIPTables()
+        iptables.select_table('filter')
+        
         # Configure each rule
-        for new_rule in rules:
+        for rule in rules:
+            iptables.select_chain(rule.get('chain', 'INPUT'))
+            iptables.add_rule(rule.get('params'))
             
-            # Target chain / config flag
-            chain  = iptc.Chain(iptc.Table(iptc.Table.FILTER), new_rule.get('chain', 'INPUT'))  
-            config = True
-            
-            # Look at existing rules
-            for rule in chain.rules:
-                for match in rule.matches:
-                    
-                    # Port already configured
-                    if int(match.dport) == new_rule.dport:
-                        config = False
-                        
-            # If configuring the new rule
-            if config:
-                
-                # Setup the firewall rule
-                rule          = iptc.Rule()
-                rule.protocol = new_rule.get('proto')
-                rule.target   = iptc.Target(rule, new_rule.get('target'))
-                
-                # Define rule match parameters
-                match         = iptc.Match(rule, "state")
-                match.state   = new_rule.get('state')
-                match.dport   = str(new_rule.get('dport'))
-                
-                # Add match parameters and append to chain
-                rule.add_match(match)
-                chain.insert_rule(rule)
-                self.feedback.success('Appended rule to chain \'{0}\': proto={1}, state={2}, dport={3}, target={4}'.format(
-                    new_rule.get('chain'),
-                    new_rule.get('proto'),
-                    new_rule.get('state'),
-                    str(new_rule.get('dport')),
-                    new_rule.get('target')
-                ))
-            else:
-                self.feedback.info('Firewall rule matching port {0} exists, skipping...'.format(str(new_rule.get('dport'))))
-                
         # Save the iptables config
-        self._iptables_save()
+        iptables.save(restart=True)
         
     def _config_phpfpm(self):
         """
         Configuration steps for PHP-FPM.
         """
         self.mkdir('/etc/php-fpm.d/disabled')
-        shutil.move('/etc/php-fpm.d/www.conf', '/etc/php-fpm.d/disabled/www.conf')
+        if path.isfile('/etc/php-fpm.d/www.conf'):
+            shutil.move('/etc/php-fpm.d/www.conf', '/etc/php-fpm.d/disabled/www.conf')
         self.feedback.success('Configured PHP-FPM')
         
     def _config_nginx(self):
@@ -118,19 +96,19 @@ class _NGUtilApp(_NGUtilCommon):
         
         # Get the number of processers
         exit_code, stdout, stderr = self.run_command('grep processor /proc/cpuinfo')
-        _WORKERPROCESSES = len(stdout.readlines())
+        _WORKERPROCESSES = len(stdout.split('\n'))
         
         # Get system ulimit
         exit_code, stdout, stderr = self.run_command('ulimit -n', shell=True)
-        _WORKERCONNECTION = stdout.readlines()[0].rstrip()
+        _WORKERCONNECTION = stdout.rstrip()
         
         # Setup the template
-        self.template.setup('NG_CONFIG', '/etc/nginx/nginx.conf')
-        self.template.setvars(
-            WORKERPROCESSES =  _WORKERPROCESSES,
-            WORKERCONNECTION = _WORKERCONNECTION
-        )
-        self.template.deploy()
+        self.template.setup('NG_CONF', '/etc/nginx/nginx.conf')
+        self.template.setvars({
+            'WORKERPROCESSES':  _WORKERPROCESSES,
+            'WORKERCONNECTION': _WORKERCONNECTION
+        })
+        self.template.deploy(overwrite=True)
         
     def _convert_https(self, config):
         """
@@ -191,14 +169,27 @@ class _NGUtilApp(_NGUtilCommon):
                 unlink(attrs['local'])
             else:
                 self.feedback.info('Repo provided by \'{0}\' already installed...'.format(attrs['upstream']))
+    
+        # Compile packages that need to be installed  
+        ts        = rpm.TransactionSet()
+        _packages = []
+        for pkg in self.packages:
+            pkg_obj = ts.dbMatch('name', pkg)
+            if pkg_obj.count() == 0:
+                _packages.append(pkg)
+                self.feedback.info('Marking package \'{0}\' for installation...'.format(pkg))
+            else:
+                self.feedback.info('Package \'{0}\' already installed, skipping...'.format(pkg))
         
-        # Packages to install
-        packages = ['nginx', 'policycoreutils-python', 'php56u']
-        self.feedback.info('Preparing to install packages: {0}'.format(' '.join(packages)))
-        
-        # Install the packages
-        self.run_command('yum install {0} -y'.format(' '.join(packages)), stdout=sys.stdout, stderr=sys.stderr)
-        self.feedback.success('Installed all packages!')
+        # If installing any packages
+        if _packages:
+            self.feedback.info('Preparing to install packages: {0}'.format(' '.join(_packages)))
+            
+            # Install the packages
+            self.run_command('yum install {0} -y'.format(' '.join(_packages)), stdout=sys.stdout, stderr=sys.stderr)
+            self.feedback.success('Installed all packages!')
+        else:
+            self.feedback.info('All packages already installed...')
             
         # Enable the services
         self._chkconfig('nginx')

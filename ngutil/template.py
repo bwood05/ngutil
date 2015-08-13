@@ -48,19 +48,19 @@ class _NGUtilTemplates(_NGUtilCommon):
         self.contents = fh.read()
         fh.close()
         
-    def setvars(self, **kwargs):
+    def setvars(self, args):
         """
         Set template substitution variables.
         """
-        for k,v in kwargs.iteritems():
-            self.contents = self.contents.replace('{{{{{0}}}}}'.format(k), v)
+        for k,v in args.iteritems():
+            self.contents = self.contents.replace('{{{{{0}}}}}'.format(k), str(v))
             self.feedback.success('Updated template variable \'{0}\'-> {1}'.format(k,v))
             
-    def deploy(self, owner='root', mode=644):
+    def deploy(self, owner='root', mode=644, overwrite=False):
         """
         Deploy the template file.
         """
-        if path.isfile(self.target):
+        if path.isfile(self.target) and not overwrite:
             self.die('Cannot deploy template file, target \'{0}\' already exists.'.format(self.target))
             
         # Make sure the path to the file exists

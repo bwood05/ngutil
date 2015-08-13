@@ -169,18 +169,22 @@ class NGUtil(_NGUtilCommon):
         # Setup the firewall
         self.app.config_firewall([
             {
-                'chain':  'INPUT',
-                'proto':  'tcp',
-                'dport':  80,
-                'state':  'NEW',
-                'target': 'ACCEPT'
+                'chain': 'INPUT',
+                'params': {
+                    '-p': 'tcp',
+                    '--dport': '80',
+                    '-m state --state': 'NEW',
+                    '-j': 'ACCEPT'
+                }
             },
             {
-                'chain':  'INPUT',
-                'proto':  'tcp',
-                'dport':  443,
-                'state':  'NEW',
-                'target': 'ACCEPT'   
+                'chain': 'INPUT',
+                'params': {
+                    '-p': 'tcp',
+                    '--dport': '443',
+                    '-m state --state': 'NEW',
+                    '-j': 'ACCEPT'
+                }
             }
         ])
     
