@@ -4,13 +4,13 @@ import shutil
 from os import path, unlink
 
 # RPM module
-try:
+try: 
     import rpm
-except:
+except: 
     pass
 
 # NGUtil Libraries
-from .common import _NGUtilCommon
+from .common import _NGUtilCommon, _NGUtilSELinux
 from .template import _NGUtilTemplates
 from .iptables import _NGUtilIPTables
 
@@ -38,6 +38,9 @@ class _NGUtilApp(_NGUtilCommon):
         
         # Template manager
         self.template = _NGUtilTemplates()
+        
+        # SELinux manager
+        self.selinux  = _NGUtilSELinux()
         
         # Installed packages
         self.packages = ['nginx', 'policycoreutils-python', 'php56u', 'php56u-fpm']
@@ -87,6 +90,17 @@ class _NGUtilApp(_NGUtilCommon):
         self.mkdir('/etc/php-fpm.d/disabled')
         if path.isfile('/etc/php-fpm.d/www.conf'):
             shutil.move('/etc/php-fpm.d/www.conf', '/etc/php-fpm.d/disabled/www.conf')
+        
+        # Deploy the default pool configuration
+        self.template.setup('FPM', '/etc/php-fpm.d/pool.conf')
+        self.template.deploy(overwrite=True)
+        
+        # Create pool log / session paths
+        for dir in ['/srv/www/pool/logs/php-fpm', '/srv/www/pool/session']:
+            self.mkdir(dir)
+            
+        # Enable the port for SELinux
+        self.selinux.add_port(9000, 'tcp', 'http_port_t')
         self.feedback.success('Configured PHP-FPM')
         
     def _config_nginx(self):
@@ -206,3 +220,7 @@ class _NGUtilApp(_NGUtilCommon):
         # Configure NGINX and PHP-FPM
         self._config_nginx()
         self._config_phpfpm()
+        
+        # Start the services
+        self.run_command('service php-fpm start', shell=True)
+        self.feedback.success('Started \'php-fpm\' service')

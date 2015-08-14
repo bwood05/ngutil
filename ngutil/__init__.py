@@ -9,6 +9,7 @@ __version__ = '0.1-1'
 __root__    = os.path.abspath(os.path.dirname(__file__))
 
 # NGUtil Libraries
+from .site import _NGUtilSite
 from .common import _NGUtilCommon
 from .application import _NGUtilApp
 
@@ -83,18 +84,12 @@ class NGUtil(_NGUtilCommon):
         # Check effective user
         self._check_user()
         
-        # Application manager
+        # Application / site manager
         self.app    = _NGUtilApp()
+        self.site   = _NGUtilSite()
         
         # Create the argument handler
         self.args   = _NGUtilArgs(**kwargs)
-    
-        # SSL attributes
-        self.ssl  = {
-            'enable': False,
-            'cert': None,
-            'key': None
-        }
     
     def _check_support(self):
         """
@@ -129,33 +124,13 @@ class NGUtil(_NGUtilCommon):
         """
         Create a new NGINX site.
         """
+        self.feedback.info('Preparing to setup NGINX site')
         
-        # Required arguments
-        required = ['fqdn']
-        optional = ['default_doc', 'activate', 'ssl', 'ssl_cert', 'ssl_key']
+        # Define a new NGINX site
+        self.site.define(self.args)
         
-        # Make sure all required arguments are set
-        for k in required:
-            if not self.args.get(k):
-                self.die('Missing required argument \'{0}\''.format(k))
-        
-        # If using SSL
-        if self.args.get('ssl'):
-            self.ssl['enable'] = True
-            
-            # Make sure the certificate and key are set
-            for k in ['ssl_cert', 'ssl_key']:
-                if not self.args.get(k):
-                    self.die('Missing required argument \'{0}\', must supply to enable SSL'.format(k))
-                
-                # Make sure the file exists
-                ssl_file = self.args.get(k)
-                if not os.path.isfile(ssl_file):
-                    self.die('Could not locate \'{0}\' file \'{1}\''.format(k, ssl_file))
-            
-            # Set the SSL key and certificate
-            self.ssl['key'] = self.args.get('ssl_key')
-            self.ssl['cert'] = self.args.get('ssl_cert')
+        # Create the site
+        self.site.create()
         
     def setup(self):
         """

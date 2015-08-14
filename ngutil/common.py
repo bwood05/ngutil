@@ -1,8 +1,11 @@
-from os import path, makedirs
+from pwd import getpwnam
+from grp import getgrnam
 from sys import exit, stderr
-from subprocess import Popen, PIPE
 from feedback import Feedback
+from subprocess import Popen, PIPE
+from os import path, makedirs, chown, listdir
 
+# ngutil
 from ngutil import __root__
 
 class _NGUtilCommon(object):
@@ -71,3 +74,40 @@ class _NGUtilCommon(object):
             return proc.returncode, out, err
         except Exception as e:
             self.die('Failed to run command \'{0}\': ERROR={1}'.format(str(cmd), str(e)))
+            
+class _NGUtilSELinux(_NGUtilCommon):
+    """
+    Class wrapper for handling SELinux interactions.
+    """
+    def __init__(self):
+        super(_NGUtilSELinux, self).__init__()
+
+        # Check if SELinux is available
+        try:
+            import selinux
+            self._selinux = selinux
+            
+            # Enforcing / status
+            self.enforcing = True if selinux.security_getenforce() == 1 else False
+            self.enabled   = True if selinux.is_selinux_enabled() == 1 else False 
+            
+            # If SELinux found and enabled
+            if self.enabled:
+                self.feedback.info('SELinux found on current system: enforcing={0}'.format(repr(self.enforcing)))
+            
+            # SELinux disabled
+            else:
+                self.feedback.info('SELinux disabled on current system...')
+            
+        # SELinux not available
+        except:
+            self.feedback.info('SELinux not available on current system')
+            self.enabled = False
+
+    def add_port(self, port, proto, context):
+        if self.enabled:
+            self.run_command('semanage port -a -t {0} -p {1} {2}'.format(context, proto, port), shell=True)
+
+    def chcon(path, context, recursive=False):
+        if self.enabled:
+            self._selinux.chcon(path, content, recursive)

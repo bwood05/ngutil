@@ -77,45 +77,6 @@ check_options() {
 	return 0
 }
 
-create_site_dir() {
-	if [ ! -d /srv/www/$SITENAME ]; then
-		mkdir /srv/www/$SITENAME
-		if [ $? -ne 0 ]; then
-			return 1
-		fi
-	fi
-	if [ ! -d /srv/www/$SITENAME/logs ]; then
-		mkdir /srv/www/$SITENAME/logs
-		if [ $? -ne 0 ]; then
-			return 1
-		fi
-	fi
-	if [ ! -d /srv/www/$SITENAME/logs/php-fpm ]; then
-		mkdir /srv/www/$SITENAME/logs/php-fpm
-		if [ $? -ne 0 ]; then
-			return 1
-		fi
-	fi
-	if [ ! -d /srv/www/$SITENAME/public ]; then
-		mkdir /srv/www/$SITENAME/public
-		if [ $? -ne 0 ]; then
-			return 1
-		fi
-	fi
-	if [ ! -d /srv/www/$SITENAME/session ]; then
-		mkdir /srv/www/$SITENAME/session
-		if [ $? -ne 0 ]; then
-			return 1
-		fi
-	fi
-}
-
-set_dir_permissions() {
-	chown -R root:nginx /srv/www/$SITENAME
-	chmod -R 750 /srv/www/$SITENAME
-	chcon -R -t httpd_sys_content_t /srv/www/$SITENAME/
-}
-
 generate_nginx_config() {
 	if [ "$SSL" = true ]; then
 		SITECONFIG="
