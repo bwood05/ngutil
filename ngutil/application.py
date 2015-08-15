@@ -33,6 +33,9 @@ class _NGUtilApp(_NGUtilCommon):
         }
     }
     
+    # Deployment marker
+    MARKER = '{0}/setup'.format(self._DATA)
+    
     def __init__(self):
         super(_NGUtilApp, self).__init__()
         
@@ -149,6 +152,16 @@ class _NGUtilApp(_NGUtilCommon):
         """
         return False
         
+    def preflight(self):
+        """
+        Preflight check before running setup.
+        """
+        if path.isfile(self.MARKER):
+            self.die('Setup has already been run, use the \'-f\' flag to force a re-run...')
+        
+        # Preflight checks complete
+        self.feedback.info('Preparing to setup NGINX...')
+        
     def install(self):
         """
         Make sure NGINX is installed.
@@ -224,3 +237,8 @@ class _NGUtilApp(_NGUtilCommon):
         # Start the services
         self.run_command('service php-fpm start', shell=True)
         self.feedback.success('Started \'php-fpm\' service')
+        
+        # Create the setup marker
+        mh = open(self.MARKER, 'w')
+        mh.write('1')
+        mh.close()

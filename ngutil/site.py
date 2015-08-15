@@ -1,4 +1,5 @@
 import shutil
+from os import symlink
 
 # ngutil
 from .template import _NGUtilTemplates
@@ -29,7 +30,7 @@ class _NGUtilSite(_NGUtilCommon):
     
         # Required / optional params
         self.params = {
-            'required': ['fqdn']
+            'required': ['fqdn'],
             'optional': ['default_doc', 'activate', 'ssl', 'ssl_cert', 'ssl_key']
         }
     
@@ -76,6 +77,34 @@ class _NGUtilSite(_NGUtilCommon):
         # Set SELinux context
         self.selinux.chcon(site_base, 'httpd_sys_content_t', recursive=True)
     
+    def _activate_site(self):
+        """
+        Optionally activate the site.
+        """
+        if self.properties['activate']:
+            if not path.isfile(self.site_config['enabled']):
+                symlink(self.site_config['available'], self.site_config['enabled'])
+                self.feedback.success('Activated site -> {0}'.format(self.site_config['enabled']))
+            else:
+                self.feedback.info('Site already activated -> {0}'.format(self.site_config['enabled']))
+    
+    def _generate_nginx_config(self):
+        """
+        Generate NGINX config files for the new site.
+        """
+        
+        # Setup the template
+        self.template.setup(('NG_HTTPS' if self.ssl['enabled'] else 'NG_HTTP'), self.site_config['available'])
+
+        # Update placeholder variables
+        self.template.setvars({
+            'SITENAME': self.properties['fqdn'],
+            'DEFAULTDOC': self.properties['default_doc']
+        })
+    
+        # Deploy the configuration
+        self.template.deploy(overwrite=True)
+    
     def define(self, params):
         """
         Define attributes for creating a new site definition.
@@ -107,6 +136,11 @@ class _NGUtilSite(_NGUtilCommon):
         else:
             self.feedback.info('Not using SSL for site \'{0}\''.format(params['fqdn']))
             
+        # Site configuration
+        self.site_config = {
+            'available': '/etc/nginx/sites-available/{0}.conf'.format(params['fqdn']),
+            'enabled': '/etc/nginx/sites-enabled/{0}.conf'.format(params['fqdn'])
+        }
             
         # Merge with site properties
         self.properties = params
@@ -117,3 +151,12 @@ class _NGUtilSite(_NGUtilCommon):
         """
         self._create_dirs()
         self._setup_ssl_certs()
+        self._generate_nginx_config()
+        
+        # Site created
+        self.feedback.block([
+            '\'{0}\' configuration complete!'.format(self.properties['fqdn']),
+            'You will need to restart NGINX/PHP-FPM to make the site available:',
+            '> service nginx restart',
+            '> service php-fpm restart'
+        ], 'COMPLETE')

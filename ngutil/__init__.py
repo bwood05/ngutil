@@ -51,6 +51,7 @@ class _NGUtilArgs(_NGUtilCommon):
         self.parser.add_argument('-s', '--ssl', help='Configure the site to use SSL', action='store_true')
         self.parser.add_argument('-C', '--ssl-cert', help='Location of the SSL certificate for the site', action='append')
         self.parser.add_argument('-K', '--ssl-key', help='Location of the SSL key for the site', action='append')
+        self.parser.add_argument('-f', '--force', help='Force a re-run of the initial setup utility', action='store_true')
       
         # Parse CLI arguments
         sys.argv.pop(0)
@@ -136,10 +137,9 @@ class NGUtil(_NGUtilCommon):
         """
         Setup the NGINX server.
         """
-        self.feedback.info('Preparing to setup NGINX...')
         
-        # Install required software
-        self.app.install()
+        # Preflight checks
+        self.app.preflight()
         
         # Setup the firewall
         self.app.config_firewall([
@@ -162,6 +162,9 @@ class NGUtil(_NGUtilCommon):
                 }
             }
         ])
+        
+        # Install required software
+        self.app.install()
     
     def _action_mapper(self):
         """
