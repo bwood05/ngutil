@@ -44,7 +44,7 @@ class _NGUtilArgs(_NGUtilCommon):
         
         # Create a new argument parsing object and populate the arguments
         self.parser = argparse.ArgumentParser(description=self._return_help(), formatter_class=argparse.RawTextHelpFormatter)
-        self.parser.add_argument('action', help='Create a site [create_site] or setup NGINX [setup]')
+        self.parser.add_argument('action', help='Create a site [create_site], activate a site [activate_site], or setup NGINX [setup]')
         self.parser.add_argument('-n', '--fqdn', help='FQDN of the site to be created', action='append')
         self.parser.add_argument('-d', '--default-doc', help='The default index document for the site', action='append')
         self.parser.add_argument('-a', '--activate', help='Actives the site by creating a symlink', action='store_true')
@@ -140,6 +140,12 @@ class NGUtil(_NGUtilCommon):
         # Create the site
         self.site.create()
         
+    def activate_site(self):
+        """
+        Activate an NGINX site.
+        """
+        self.site.activate(self.args.get())
+        
     def setup(self):
         """
         Setup the NGINX server.
@@ -179,6 +185,7 @@ class NGUtil(_NGUtilCommon):
         """
         return {
             'create_site': self.create_site,
+            'activate_site': self.activate_site,
             'setup': self.setup
         }
         

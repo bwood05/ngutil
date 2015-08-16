@@ -84,6 +84,37 @@ class _NGUtilSite(_NGUtilCommon):
                 self.feedback.success('Activated site -> {0}'.format(self.site_config['enabled']))
             else:
                 self.feedback.info('Site already activated -> {0}'.format(self.site_config['enabled']))
+                
+    def activate(self, params):
+        """
+        Activate an existing site.
+        """
+        
+        # Target site
+        target_site = params.get('fqdn', None)
+        
+        # Site configurations
+        site_config = {
+            'available': '/etc/nginx/sites-available/{0}.conf'.format(target_site),
+            'enabled': '/etc/nginx/sites-enabled/{0}.conf'.format(target_site)
+        }
+        
+        # If no site selected
+        if not target_site:
+            self.die('Cannot activate a site without specifying the --fqdn parameter...')
+            
+        # If the site doesn't exist
+        if not path.isfile(site_config['available']):
+            self.die('Cannot activate site, NGINX configuration not found. Please use \'create_site\' instead...')
+    
+        # If the site is already active
+        if path.isfile(site_config['enabled']):
+            self.feedback.info('Site \'{0}\' already active -> {1}'.format(target_site, site_config['enabled']))
+            return True
+            
+        # Activate the site
+        symlink(site_config['available'], site_config['enabled'])
+        self.feedback.success('Activated site -> {0}'.format(site_config['enabled']))
     
     def _generate_nginx_config(self):
         """
@@ -163,5 +194,6 @@ class _NGUtilSite(_NGUtilCommon):
             '\'{0}\' configuration complete!'.format(self.properties['fqdn']),
             'You will need to restart NGINX/PHP-FPM to make the site available:',
             '> service nginx restart',
-            '> service php-fpm restart'
+            '> service php-fpm restart',
+            'You may activate the site using \'ngutil activate_site --fqdn "{0}"\''.format(self.properties['fqdn'])
         ], 'COMPLETE')
