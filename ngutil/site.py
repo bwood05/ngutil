@@ -108,7 +108,7 @@ class _NGUtilSite(_NGUtilCommon):
         
         # Process each metadata file
         for file in listdir(metadata_dir):
-            print('\n')
+            print('')
             if file.endswith('.json'):
                 fh = open('{0}/{1}'.format(metadata_dir, file), 'r')
                 metadata = json.loads(fh.read())
@@ -117,7 +117,7 @@ class _NGUtilSite(_NGUtilCommon):
                 # Display the metadata
                 print('SITE: {0}'.format(metadata['fqdn']))
                 print('> SSL Enabled: {0}'.format('Yes' if metadata['ssl']['enable'] else 'No'))
-                print('\n')
+                print('')
               
     def disable(self, params):
         """
