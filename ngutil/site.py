@@ -85,6 +85,12 @@ class _NGUtilSite(_NGUtilCommon):
             else:
                 self.feedback.info('Site already activated -> {0}'.format(self.site_config['enabled']))
                 
+            # Restart services
+            self.run_command('service nginx reload', shell=True)
+            self.feedback.success('Reloaded service \'nginx\'')
+            self.run_command('service php-fpm reload', shell=True)
+            self.feedback.success('Reloaded service \'php-fpm\'')
+                
     def activate(self, params):
         """
         Activate an existing site.
@@ -115,6 +121,12 @@ class _NGUtilSite(_NGUtilCommon):
         # Activate the site
         symlink(site_config['available'], site_config['enabled'])
         self.feedback.success('Activated site -> {0}'.format(site_config['enabled']))
+    
+        # Restart services
+        self.run_command('service nginx reload', shell=True)
+        self.feedback.success('Reloaded service \'nginx\'')
+        self.run_command('service php-fpm reload', shell=True)
+        self.feedback.success('Reloaded service \'php-fpm\'')
     
     def _generate_nginx_config(self):
         """
@@ -178,7 +190,6 @@ class _NGUtilSite(_NGUtilCommon):
             self.die('Site \'{0}\' already defined in \'{1}\''.format(params['fqdn'], self.site_config['available']))
 
         # Merge with site properties
-        print params
         self.properties = params
 
     def create(self):
@@ -188,12 +199,14 @@ class _NGUtilSite(_NGUtilCommon):
         self._create_dirs()
         self._setup_ssl_certs()
         self._generate_nginx_config()
+        self._activate_site()
         
         # Site created
         self.feedback.block([
-            '\'{0}\' configuration complete!'.format(self.properties['fqdn']),
-            'You will need to restart NGINX/PHP-FPM to make the site available:',
-            '> service nginx restart',
-            '> service php-fpm restart',
-            'You may activate the site using \'ngutil activate_site --fqdn "{0}"\''.format(self.properties['fqdn'])
+            'SITE CREATED:  {0}://{1}'.format('https' if self.ssl['enable'] else 'http', self.properties['fqdn']),
+            '> Web Root:    /srv/www/{0}'.format(self.properties['fqdn']),
+            '> Default Doc: /srv/www/{0}/{1}'.format(self.properties['fqdn'], 'index.php' if not self.properties['default_doc'] else self.properties['default_doc']),
+            '> Logs:        /srv/www/{0}/logs\n'.format(self.properties['fqdn']),
+            '> Active:      {0}'.format('Yes -> {0}'.format('/etc/nginx/sites-enabled/{0}.conf'.format(self.properties['fqdn'])) if self.properties['activate'] else 'No'),
+            'You can activate the site using: ngutil activate_site --fqdn "{0}"'.format(self.properties['fqdn'])
         ], 'COMPLETE')
