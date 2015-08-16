@@ -99,7 +99,7 @@ class _NGUtilSite(_NGUtilCommon):
         # Update placeholder variables
         self.template.setvars({
             'SITENAME': self.properties['fqdn'],
-            'DEFAULTDOC': self.properties['default_doc']
+            'DEFAULTDOC': self.properties.get('default_doc', 'index.php')
         })
     
         # Deploy the configuration
