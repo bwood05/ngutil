@@ -142,6 +142,10 @@ class _NGUtilSite(_NGUtilCommon):
             'enabled': '/etc/nginx/sites-enabled/{0}.conf'.format(params['fqdn'])
         }
 
+        # Make sure the site isn't already defined
+        if path.isfile(self.site_config['available']):
+            self.die('Site \'{0}\' already defined in \'{1}\''.format(params['fqdn'], self.site_config['available']))
+
         # Merge with site properties
         self.properties = params
 
