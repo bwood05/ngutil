@@ -114,9 +114,24 @@ class _NGUtilSite(_NGUtilCommon):
                 metadata = json.loads(fh.read())
                 fh.close()
                 
+                # Site status
+                if path.isfile(metadata['config']['enabled']):
+                    site_status = 'Yes -> {0}'.format(metadata['config']['enabled'])
+                else:
+                    site_status = 'No'
+                
                 # Display the metadata
                 print('SITE: {0}'.format(metadata['fqdn']))
+                print('> DocRoot: /srv/www/{0}'.format(metadata['fqdn']))
+                print('> Config: {0}'.format(metadata['config']['available']))
+                print('> Enabled: {0}'.format(site_status))
                 print('> SSL Enabled: {0}'.format('Yes' if metadata['ssl']['enable'] else 'No'))
+                
+                # SSL information
+                if metadata['ssl']['enable']:
+                    print('> SSL Certificate: {0}'.format(metadata['ssl']['cert']))
+                    print('> SSL Key: {0}'.format(metadata['ssl']['key']))
+                    
                 print('')
               
     def disable(self, params):
@@ -222,6 +237,10 @@ class _NGUtilSite(_NGUtilCommon):
         # Define the site metadata
         metadata_json = {
             'fqdn': self.properties['fqdn'],
+            'config': {
+                'available': '/etc/nginx/sites-available/{0}.conf'.format(self.properties['fqdn']),
+                'enabled': '/etc/nginx/sites-enabled/{0}.conf'.format(self.properties['fqdn'])           
+            },
             'ssl': self.ssl
         }
         
