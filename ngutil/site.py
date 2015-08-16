@@ -75,7 +75,7 @@ class _NGUtilSite(_NGUtilCommon):
         self.run_command('chmod -R 750 {0}'.format(site_base))
 
         # Set SELinux context
-        self.selinux.chcon(site_base, 'httpd_sys_content_t', recursive=True)
+        self.selinux.chcon(site_base, 'unconfined_u:object_r:httpd_sys_content_t:s0', recursive=True)
     
     def _activate_site(self):
         """
