@@ -1,5 +1,5 @@
 import shutil
-from os import symlink
+from os import symlink, path
 
 # ngutil
 from .template import _NGUtilTemplates
