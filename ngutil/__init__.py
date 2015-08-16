@@ -63,10 +63,14 @@ class _NGUtilArgs(_NGUtilCommon):
         """
         self._args[k] = v
         
-    def get(self, k, default=None, use_json=False):
+    def get(self, k=None, default=None, use_json=False):
         """
         Retrieve an argument passed via the command line.
         """
+        
+        # Return all arguments
+        if not k:
+            return self._args
         
         # Get the value from argparse
         _raw = self._args.get(k, default)
@@ -128,7 +132,7 @@ class NGUtil(_NGUtilCommon):
         self.feedback.info('Preparing to setup NGINX site')
         
         # Define a new NGINX site
-        self.site.define(self.args)
+        self.site.define(self.args.get())
         
         # Create the site
         self.site.create()
