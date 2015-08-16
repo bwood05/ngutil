@@ -110,7 +110,7 @@ class _NGUtilSite(_NGUtilCommon):
                 
                 # Display the metadata
                 print('SITE: {0}'.format(metadata['fqdn']))
-                print('> SSL Enabled: {0}'.format('Yes' if metadata['ssl']['enable']))
+                print('> SSL Enabled: {0}'.format('Yes' if metadata['ssl']['enable'] else 'No'))
               
     def disable(self, params):
         """
