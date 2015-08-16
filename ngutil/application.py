@@ -247,6 +247,4 @@ class _NGUtilApp(_NGUtilCommon):
         self.feedback.success('Started \'php-fpm\' service')
         
         # Create the setup marker
-        mh = open(self.MARKER, 'w')
-        mh.write('1')
-        mh.close()
+        self.mkfile(self.marker, contents='1', overwrite=True)
