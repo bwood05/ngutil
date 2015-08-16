@@ -42,12 +42,21 @@ class _NGUtilCommon(object):
         """
         return '{0}/{1}'.format(self._DATA, FILE)
         
+    def mkpath(self, _path):
+        """
+        Extract the directory from a file name and make sure the path exists.
+        """
+        self.mkdir(path.dirname(_path))
+        
     def mkfile(self, _path, contents=None, overwrite=False):
         """
         Make a new file and optionally write data to it.
         """
         if path.isfile(_path) and not overwrite:
             self.die('Cannot make file "{0}". Already exists and overwrite={1}'.format(_path, repr(overwrite)))
+        
+        # Make sure the directory exists
+        self.mkpath(_path)
         
         # Make the file
         fh = open(_path, 'w')
