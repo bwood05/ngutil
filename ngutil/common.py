@@ -42,6 +42,26 @@ class _NGUtilCommon(object):
         """
         return '{0}/{1}'.format(self._DATA, FILE)
         
+    def mkfile(self, _path, contents=None, overwrite=False):
+        """
+        Make a new file and optionally write data to it.
+        """
+        if path.isfile(_path) and not overwrite:
+            self.die('Cannot make file "{0}". Already exists and overwrite={1}'.format(_path, repr(overwrite)))
+        
+        # Make the file
+        fh = open(_path, 'w')
+        
+        # If writing contents
+        if contents:
+            fh.write(contents)
+        
+        # Close the file
+        fh.close()
+        
+        # Return the path
+        return _path
+        
     def mkdir(self, dir):
         """
         Make directory if it doesn't exist.

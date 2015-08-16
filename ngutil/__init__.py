@@ -37,6 +37,18 @@ class _NGUtilArgs(_NGUtilCommon):
          return ("NGUtil\n\n"
                  "Scripts to help install and configure sites with nginx and php-fpm.\n")
         
+    def _actions_help(self):
+        """
+        Return a formatted string of supported actions.
+        """
+        return(
+            'setup:        Setup  NGINX and PHP-FPM\n'
+            'create_site:  Create a new NGINX site definition\n'
+            'enable_site:  Link an available site in "/etc/nginx/sites-enabled"\n'
+            'disable_site: Remove a site from "/etc/nginx/sites-enabled"\n'
+            'list_sites:   List all managed sites'
+        )
+        
     def _construct(self):
         """
         Construct the argument parser.
@@ -44,7 +56,7 @@ class _NGUtilArgs(_NGUtilCommon):
         
         # Create a new argument parsing object and populate the arguments
         self.parser = argparse.ArgumentParser(description=self._return_help(), formatter_class=argparse.RawTextHelpFormatter)
-        self.parser.add_argument('action', help='Create a site [create_site], activate a site [activate_site], or setup NGINX [setup]')
+        self.parser.add_argument('action', help=self._actions_help())
         self.parser.add_argument('-n', '--fqdn', help='FQDN of the site to be created', action='append')
         self.parser.add_argument('-d', '--default-doc', help='The default index document for the site', action='append')
         self.parser.add_argument('-a', '--activate', help='Actives the site by creating a symlink', action='store_true')
@@ -140,11 +152,23 @@ class NGUtil(_NGUtilCommon):
         # Create the site
         self.site.create()
         
-    def activate_site(self):
+    def list_sites(self):
         """
-        Activate an NGINX site.
+        List all managed NGINX sites.
         """
-        self.site.activate(self.args.get())
+        self.site.list_all()
+        
+    def disbable_site(self):
+        """
+        Disable an NGINX site.
+        """
+        self.site.disable(self.args.get())
+        
+    def enable_site(self):
+        """
+        Enable an NGINX site.
+        """
+        self.site.enable(self.args.get())
         
     def setup(self):
         """
@@ -185,7 +209,8 @@ class NGUtil(_NGUtilCommon):
         """
         return {
             'create_site': self.create_site,
-            'activate_site': self.activate_site,
+            'enable_site': self.enable_site,
+            'disable_site': self.disable_site,
             'setup': self.setup
         }
         

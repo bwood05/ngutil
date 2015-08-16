@@ -1,5 +1,6 @@
+import json
 import shutil
-from os import symlink, path
+from os import symlink, path, unlink
 
 # ngutil
 from .template import _NGUtilTemplates
@@ -90,10 +91,10 @@ class _NGUtilSite(_NGUtilCommon):
             self.feedback.success('Reloaded service \'nginx\'')
             self.run_command('service php-fpm reload', shell=True)
             self.feedback.success('Reloaded service \'php-fpm\'')
-                
-    def activate(self, params):
+              
+    def disable(self, params):
         """
-        Activate an existing site.
+        Disable an existing site.
         """
         
         # Target site
@@ -107,20 +108,54 @@ class _NGUtilSite(_NGUtilCommon):
         
         # If no site selected
         if not target_site:
-            self.die('Cannot activate a site without specifying the --fqdn parameter...')
+            self.die('Cannot disable a site without specifying the --fqdn parameter...')
+            
+        # If the site isn't enabled
+        if not path.isfile(site_config['enabled']):
+            self.feedback.info('Site already disabled...')
+            return True
+    
+        # Disable the site
+        else:
+            unlink(site_config['enabled'])
+            self.feedback.success('Disabled site \'{0}\''.format(params['fqdn']))
+    
+            # Restart services
+            self.run_command('service nginx reload', shell=True)
+            self.feedback.success('Reloaded service \'nginx\'')
+            self.run_command('service php-fpm reload', shell=True)
+            self.feedback.success('Reloaded service \'php-fpm\'')
+                
+    def enable(self, params):
+        """
+        Enable an existing site.
+        """
+        
+        # Target site
+        target_site = params.get('fqdn', None)
+        
+        # Site configurations
+        site_config = {
+            'available': '/etc/nginx/sites-available/{0}.conf'.format(target_site),
+            'enabled': '/etc/nginx/sites-enabled/{0}.conf'.format(target_site)
+        }
+        
+        # If no site selected
+        if not target_site:
+            self.die('Cannot enable a site without specifying the --fqdn parameter...')
             
         # If the site doesn't exist
         if not path.isfile(site_config['available']):
-            self.die('Cannot activate site, NGINX configuration not found. Please use \'create_site\' instead...')
+            self.die('Cannot enable site, NGINX configuration not found. Please use \'create_site\' instead...')
     
         # If the site is already active
         if path.isfile(site_config['enabled']):
-            self.feedback.info('Site \'{0}\' already active -> {1}'.format(target_site, site_config['enabled']))
+            self.feedback.info('Site \'{0}\' already enabled -> {1}'.format(target_site, site_config['enabled']))
             return True
             
         # Activate the site
         symlink(site_config['available'], site_config['enabled'])
-        self.feedback.success('Activated site -> {0}'.format(site_config['enabled']))
+        self.feedback.success('Enabled site -> {0}'.format(site_config['enabled']))
     
         # Restart services
         self.run_command('service nginx reload', shell=True)
@@ -144,6 +179,28 @@ class _NGUtilSite(_NGUtilCommon):
     
         # Deploy the configuration
         self.template.deploy(overwrite=True)
+        
+    def _set_metadata(self):
+        """
+        Create metadata entry for site.
+        """
+                
+        # Site metadata location
+        metadata_dir  = '/root/.ngutil/metadata'
+        metadata_site = '{0}/{1}.json'.format(metadata_dir, self.properties['fqdn'])
+        
+        # Make sure the metadata directory exists
+        self.mkdir(self.metadata['dir'])
+        
+        # Define the site metadata
+        metadata_json = {
+            'fqdn': self.properties['fqdn'],
+            'ssl': self.ssl
+        }
+        
+        # Write the site metadata
+        self.mkfile(metadata_site, contents=json.dumps(metadata_json))
+        self.feedback.success('Created site metadata -> {0}'.format(metadata_site))
         
     def define(self, params):
         """
@@ -200,6 +257,7 @@ class _NGUtilSite(_NGUtilCommon):
         self._setup_ssl_certs()
         self._generate_nginx_config()
         self._activate_site()
+        self._set_metadata()
         
         # Site created
         self.feedback.block([
