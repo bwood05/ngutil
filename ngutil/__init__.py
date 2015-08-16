@@ -211,6 +211,7 @@ class NGUtil(_NGUtilCommon):
             'create_site': self.create_site,
             'enable_site': self.enable_site,
             'disable_site': self.disable_site,
+            'list_sites': self.list_sites,
             'setup': self.setup
         }
         
