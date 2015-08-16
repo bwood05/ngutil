@@ -94,7 +94,7 @@ class _NGUtilSite(_NGUtilCommon):
         """
         
         # Setup the template
-        self.template.setup(('NG_HTTPS' if self.ssl['enabled'] else 'NG_HTTP'), self.site_config['available'])
+        self.template.setup(('NG_HTTPS' if self.ssl['enable'] else 'NG_HTTP'), self.site_config['available'])
 
         # Update placeholder variables
         self.template.setvars({
