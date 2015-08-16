@@ -110,4 +110,4 @@ class _NGUtilSELinux(_NGUtilCommon):
 
     def chcon(self, path, context, recursive=False):
         if self.enabled:
-            self._selinux.chcon(path, content, recursive)
+            self._selinux.chcon(path, context, recursive)
