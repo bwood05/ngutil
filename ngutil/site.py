@@ -15,9 +15,6 @@ class _NGUtilSite(_NGUtilCommon):
         # Template manager
         self.template = _NGUtilTemplates()
 
-        # SELinux manager
-        self.selinux  = _NGUtilSELinux()
-
         # SSL attributes
         self.ssl  = {
             'enable': False,
@@ -109,6 +106,9 @@ class _NGUtilSite(_NGUtilCommon):
         """
         Define attributes for creating a new site definition.
         """
+
+        # SELinux manager
+        self.selinux  = _NGUtilSELinux()
 
         # Make sure all required arguments are set
         for k in self.params['required']:

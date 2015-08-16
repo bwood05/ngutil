@@ -42,9 +42,6 @@ class _NGUtilApp(_NGUtilCommon):
         # Template manager
         self.template = _NGUtilTemplates()
         
-        # SELinux manager
-        self.selinux  = _NGUtilSELinux()
-        
         # Installed packages
         self.packages = ['nginx', 'policycoreutils-python', 'php56u', 'php56u-fpm']
         
@@ -156,6 +153,11 @@ class _NGUtilApp(_NGUtilCommon):
         """
         Preflight check before running setup.
         """
+        
+        # SELinux manager
+        self.selinux  = _NGUtilSELinux()
+        
+        # Check if already setup
         if path.isfile(self.marker):
             self.die('Setup has already been run, use the \'-f\' flag to force a re-run...')
         
