@@ -158,7 +158,7 @@ class NGUtil(_NGUtilCommon):
         """
         self.site.list_all()
         
-    def disbable_site(self):
+    def disable_site(self):
         """
         Disable an NGINX site.
         """

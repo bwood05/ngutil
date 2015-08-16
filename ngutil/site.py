@@ -1,6 +1,7 @@
+from __future__ import print_function
 import json
 import shutil
-from os import symlink, path, unlink
+from os import symlink, path, unlink, listdir
 
 # ngutil
 from .template import _NGUtilTemplates
@@ -91,6 +92,25 @@ class _NGUtilSite(_NGUtilCommon):
             self.feedback.success('Reloaded service \'nginx\'')
             self.run_command('service php-fpm reload', shell=True)
             self.feedback.success('Reloaded service \'php-fpm\'')
+             
+    def list_all(self):
+        """
+        List all managed sites with metdata.
+        """
+        
+        # Metadata directory
+        metadata_dir = '/root/.ngutil/metadata'
+        
+        # Process each metadata file
+        for file in listdir(metadata_dir):
+            if file.endswith('.json'):
+                fh = open(file, 'r')
+                metadata = json.loads(fh.read())
+                fh.close()
+                
+                # Display the metadata
+                print('SITE: {0}'.format(metadata['fqdn']))
+                print('> SSL Enabled: {0}'.format('Yes' if metadata['ssl']['enable']))
               
     def disable(self, params):
         """
