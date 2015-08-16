@@ -264,7 +264,7 @@ class _NGUtilSite(_NGUtilCommon):
             'SITE CREATED:  {0}://{1}'.format('https' if self.ssl['enable'] else 'http', self.properties['fqdn']),
             '> Web Root:    /srv/www/{0}'.format(self.properties['fqdn']),
             '> Default Doc: /srv/www/{0}/{1}'.format(self.properties['fqdn'], 'index.php' if not self.properties['default_doc'] else self.properties['default_doc']),
-            '> Logs:        /srv/www/{0}/logs\n'.format(self.properties['fqdn']),
-            '> Active:      {0}'.format('Yes -> {0}'.format('/etc/nginx/sites-enabled/{0}.conf'.format(self.properties['fqdn'])) if self.properties['activate'] else 'No'),
+            '> Logs:        /srv/www/{0}/logs'.format(self.properties['fqdn']),
+            '> Active:      {0}\n'.format('Yes -> {0}'.format('/etc/nginx/sites-enabled/{0}.conf'.format(self.properties['fqdn'])) if self.properties['activate'] else 'No'),
             'You can activate the site using: ngutil activate_site --fqdn "{0}"'.format(self.properties['fqdn'])
         ], 'COMPLETE')
