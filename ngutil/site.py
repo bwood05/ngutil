@@ -101,6 +101,11 @@ class _NGUtilSite(_NGUtilCommon):
         # Metadata directory
         metadata_dir = '/root/.ngutil/metadata'
         
+        # If no metadata exists
+        if not path.isdir(metadata_dir) or listdir(metadata_dir) == []:
+            self.feedback.info('No site metadata defined...')
+            return False
+        
         # Process each metadata file
         for file in listdir(metadata_dir):
             if file.endswith('.json'):
@@ -210,7 +215,7 @@ class _NGUtilSite(_NGUtilCommon):
         metadata_site = '{0}/{1}.json'.format(metadata_dir, self.properties['fqdn'])
         
         # Make sure the metadata directory exists
-        self.mkdir(self.metadata['dir'])
+        self.mkdir(metadata_dir)
         
         # Define the site metadata
         metadata_json = {
