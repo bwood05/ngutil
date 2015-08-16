@@ -70,7 +70,10 @@ class _NGUtilArgs(_NGUtilCommon):
         
         # Return all arguments
         if not k:
-            return self._args
+            _all_args = {}
+            for k,v in self._args.iteritems():
+                _all_args[k] = v if not isinstance(v, list) else v[0]
+            return _all_args
         
         # Get the value from argparse
         _raw = self._args.get(k, default)

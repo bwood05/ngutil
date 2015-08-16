@@ -71,8 +71,8 @@ class _NGUtilSite(_NGUtilCommon):
             self.mkdir('{0}/ssl'.format(site_base))
 
         # Setup directory permissions
-        self.run_command('chown -R root:nginx {0}'.format(site_base), shell=True)
-        self.run_command('chmod -R 750 {0}'.format(site_base), shell=True)
+        self.run_command('chown -R root:nginx {0}'.format(site_base))
+        self.run_command('chmod -R 750 {0}'.format(site_base))
 
         # Set SELinux context
         self.selinux.chcon(site_base, 'httpd_sys_content_t', recursive=True)

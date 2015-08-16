@@ -108,6 +108,6 @@ class _NGUtilSELinux(_NGUtilCommon):
         if self.enabled:
             self.run_command('semanage port -a -t {0} -p {1} {2}'.format(context, proto, port), shell=True)
 
-    def chcon(path, context, recursive=False):
+    def chcon(self, path, context, recursive=False):
         if self.enabled:
             self._selinux.chcon(path, content, recursive)
