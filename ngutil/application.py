@@ -37,7 +37,7 @@ class _NGUtilApp(_NGUtilCommon):
         super(_NGUtilApp, self).__init__()
      
         # Deployment marker
-        self.marker   = '{0}/setup'.format(self._DATA)
+        self.marker   = '/root/.ngutil/setup'
         
         # Template manager
         self.template = _NGUtilTemplates()
@@ -115,6 +115,12 @@ class _NGUtilApp(_NGUtilCommon):
         # Get system ulimit
         exit_code, stdout, stderr = self.run_command('ulimit -n', shell=True)
         _WORKERCONNECTION = stdout.rstrip()
+        
+        # Make sure worker connections is a number
+        try:
+            _WORKERCONNECTION = str(int(_WORKERCONNECTION))
+        except:
+            _WORKERCONNECTION = '1024'
         
         # Setup the template
         self.template.setup('NG_CONF', '/etc/nginx/nginx.conf')
