@@ -96,7 +96,7 @@ class _NGUtilSite(_NGUtilCommon):
         # Update placeholder variables
         self.template.setvars({
             'SITENAME': self.properties['fqdn'],
-            'DEFAULTDOC': self.properties.get('default_doc', 'index.php')
+            'DEFAULTDOC': 'index.php' if not self.properties['fqdn'] else self.properties['fqdn']
         })
     
         # Deploy the configuration
@@ -147,6 +147,7 @@ class _NGUtilSite(_NGUtilCommon):
             self.die('Site \'{0}\' already defined in \'{1}\''.format(params['fqdn'], self.site_config['available']))
 
         # Merge with site properties
+        print params
         self.properties = params
 
     def create(self):
