@@ -33,11 +33,11 @@ class _NGUtilApp(_NGUtilCommon):
         }
     }
     
-    # Deployment marker
-    MARKER = '{0}/setup'.format(self._DATA)
-    
     def __init__(self):
         super(_NGUtilApp, self).__init__()
+     
+        # Deployment marker
+        self.marker   = '{0}/setup'.format(self._DATA)
         
         # Template manager
         self.template = _NGUtilTemplates()
@@ -156,7 +156,7 @@ class _NGUtilApp(_NGUtilCommon):
         """
         Preflight check before running setup.
         """
-        if path.isfile(self.MARKER):
+        if path.isfile(self.marker):
             self.die('Setup has already been run, use the \'-f\' flag to force a re-run...')
         
         # Preflight checks complete
