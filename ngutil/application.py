@@ -100,7 +100,7 @@ class _NGUtilApp(_NGUtilCommon):
             self.mkdir(dir)
             
         # Enable the port for SELinux
-        self.selinux.add_port(9000, 'tcp', 'http_port_t')
+        # self.selinux.add_port(9000, 'tcp', 'http_port_t')
         self.feedback.success('Configured PHP-FPM')
         
     def _config_nginx(self):
