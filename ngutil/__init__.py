@@ -144,13 +144,7 @@ class NGUtil(_NGUtilCommon):
         """
         Create a new NGINX site.
         """
-        self.feedback.info('Preparing to setup NGINX site')
-        
-        # Define a new NGINX site
-        self.site.define(self.args.get())
-        
-        # Create the site
-        self.site.create()
+        self.site.create(self.args.get())
         
     def list_sites(self):
         """
@@ -174,34 +168,7 @@ class NGUtil(_NGUtilCommon):
         """
         Setup the NGINX server.
         """
-        
-        # Preflight checks
-        self.app.preflight()
-        
-        # Setup the firewall
-        self.app.config_firewall([
-            {
-                'chain': 'INPUT',
-                'params': {
-                    '-p': 'tcp',
-                    '--dport': '80',
-                    '-m state --state': 'NEW',
-                    '-j': 'ACCEPT'
-                }
-            },
-            {
-                'chain': 'INPUT',
-                'params': {
-                    '-p': 'tcp',
-                    '--dport': '443',
-                    '-m state --state': 'NEW',
-                    '-j': 'ACCEPT'
-                }
-            }
-        ])
-        
-        # Install required software
-        self.app.install()
+        self.app.setup(self.args.get())
     
     def _action_mapper(self):
         """

@@ -10,6 +10,7 @@ except:
     pass
 
 # NGUtil Libraries
+from .service import _NGUtilService
 from .common import _NGUtilCommon, _NGUtilSELinux
 from .template import _NGUtilTemplates
 from .iptables import _NGUtilIPTables
@@ -18,55 +19,38 @@ class _NGUtilApp(_NGUtilCommon):
     """
     Class object for handling setting up the NGINX application.
     """
-    
-    # Additional repositories
-    REPOS = {
-        'epel': {
-            'config': '/etc/yum.repos.d/epel.repo',
-            'local': '/tmp/epel.rpm',
-            'upstream': 'http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm'
-        },
-        'ius': {
-            'config': '/etc/yum.repos.d/ius.repo',
-            'local': '/tmp/ius.rpm',
-            'upstream': 'https://dl.iuscommunity.org/pub/ius/stable/CentOS/6/x86_64/ius-release-1.0-14.ius.centos6.noarch.rpm'
-        }
-    }
-    
     def __init__(self):
         super(_NGUtilApp, self).__init__()
      
-        # Deployment marker
+        # Passed arguments
+        self.args     = None
+     
+        # Deployment marker / template manager
         self.marker   = '/root/.ngutil/setup'
-        
-        # Template manager
         self.template = _NGUtilTemplates()
         
-        # Installed packages
+        # Installed packages / additional repositories
         self.packages = ['nginx', 'policycoreutils-python', 'php56u', 'php56u-fpm']
+        self.repos    = {
+            'epel': {
+                'config': '/etc/yum.repos.d/epel.repo',
+                'local': '/tmp/epel.rpm',
+                'upstream': 'http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm'
+            },
+            'ius': {
+                'config': '/etc/yum.repos.d/ius.repo',
+                'local': '/tmp/ius.rpm',
+                'upstream': 'https://dl.iuscommunity.org/pub/ius/stable/CentOS/6/x86_64/ius-release-1.0-14.ius.centos6.noarch.rpm'
+            }
+        }
         
-    def _chkconfig(self, service, state='on'):
-        """
-        Enable the service in chkconfig.
-        """
-        self.run_command('chkconfig {0} {1}'.format(service, state))
-        self.feedback.success('Enabled service {0} -> {1}'.format(service, state))
+        # Controlled services
+        self.service  = {
+            'nginx':    _NGUtilService('nginx'),
+            'php-fpm':  _NGUtilService('php-fpm')
+        }
         
-    def _iptables_save(self, restart=True):
-        """
-        Save and optionally restart iptables.
-        """
-        
-        # Save the iptables config
-        self.run_command('service iptables save')
-        self.feedback.success('Saved iptables rules...')
-            
-        # If restarting
-        if restart:
-            self.run_command('service iptables restart')
-            self.feedback.success('Restarted iptables service...')
-        
-    def config_firewall(self, rules):
+    def _config_firewall(self, rules):
         """
         Setup the firewall for HTTP/HTTPS access
         """
@@ -155,7 +139,7 @@ class _NGUtilApp(_NGUtilCommon):
         """
         return False
         
-    def preflight(self):
+    def _preflight(self):
         """
         Preflight check before running setup.
         """
@@ -164,13 +148,13 @@ class _NGUtilApp(_NGUtilCommon):
         self.selinux  = _NGUtilSELinux()
         
         # Check if already setup
-        if path.isfile(self.marker):
+        if path.isfile(self.marker) and not self.args.get('force', False):
             self.die('Setup has already been run, use the \'-f\' flag to force a re-run...')
         
         # Preflight checks complete
         self.feedback.info('Preparing to setup NGINX...')
         
-    def install(self):
+    def _install(self):
         """
         Make sure NGINX is installed.
         """
@@ -185,7 +169,7 @@ class _NGUtilApp(_NGUtilCommon):
             self.feedback.info('NGINX repository \'{0}\' already exists, skipping...'.format(nginx_repo))
         
         # Download / install each repo
-        for repo, attrs in self.REPOS.iteritems():
+        for repo, attrs in self.repos.iteritems():
             
             # Only install if the repo configuration hasn't been created
             if not path.isfile(attrs['config']):
@@ -227,8 +211,8 @@ class _NGUtilApp(_NGUtilCommon):
             self.feedback.info('All packages already installed...')
             
         # Enable the services
-        self._chkconfig('nginx')
-        self._chkconfig('php-fpm')
+        self.service['nginx'].enable()
+        self.service['php-fpm'].enable()
         
         # Make any required directories
         for dir in [
@@ -243,8 +227,44 @@ class _NGUtilApp(_NGUtilCommon):
         self._config_phpfpm()
         
         # Start the services
-        self.run_command('service php-fpm start', shell=True)
-        self.feedback.success('Started \'php-fpm\' service')
+        self.service['php-fpm'].restart()
+        self.service['nginx'].restart()
         
         # Create the setup marker
         self.mkfile(self.marker, contents='1', overwrite=True)
+        
+    def setup(self, args):
+        """
+        Launch the setup wizard for NGINX/PHP-FPM
+        """
+        
+        # Store arguments
+        self.args = args
+        
+        # Preflight checks
+        self._preflight()
+        
+        # Setup the firewall
+        self._config_firewall([
+            {
+                'chain': 'INPUT',
+                'params': {
+                    '-p': 'tcp',
+                    '--dport': '80',
+                    '-m state --state': 'NEW',
+                    '-j': 'ACCEPT'
+                }
+            },
+            {
+                'chain': 'INPUT',
+                'params': {
+                    '-p': 'tcp',
+                    '--dport': '443',
+                    '-m state --state': 'NEW',
+                    '-j': 'ACCEPT'
+                }
+            }
+        ])
+        
+        # Install required software
+        self._install()

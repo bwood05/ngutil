@@ -4,6 +4,7 @@ import shutil
 from os import symlink, path, unlink, listdir
 
 # ngutil
+from .service import _NGUtilService
 from .template import _NGUtilTemplates
 from .common import _NGUtilCommon, _NGUtilSELinux
 
@@ -31,6 +32,12 @@ class _NGUtilSite(_NGUtilCommon):
         self.params = {
             'required': ['fqdn'],
             'optional': ['default_doc', 'activate', 'ssl', 'ssl_cert', 'ssl_key']
+        }
+        
+        # Service handlers
+        self.service = {
+            'nginx':   _NGUtilService('nginx'),
+            'php-fpm': _NGUtilService('php-fpm')
         }
 
     def _setup_ssl_certs(self):
@@ -88,10 +95,8 @@ class _NGUtilSite(_NGUtilCommon):
                 self.feedback.info('Site already activated -> {0}'.format(self.site_config['enabled']))
                 
             # Restart services
-            self.run_command('service nginx reload', shell=True)
-            self.feedback.success('Reloaded service \'nginx\'')
-            self.run_command('service php-fpm reload', shell=True)
-            self.feedback.success('Reloaded service \'php-fpm\'')
+            self.service['nginx'].restart()
+            self.service['php-fpm'].restart()
              
     def list_all(self):
         """
@@ -200,10 +205,8 @@ class _NGUtilSite(_NGUtilCommon):
         self.feedback.success('Enabled site -> {0}'.format(site_config['enabled']))
     
         # Restart services
-        self.run_command('service nginx reload', shell=True)
-        self.feedback.success('Reloaded service \'nginx\'')
-        self.run_command('service php-fpm reload', shell=True)
-        self.feedback.success('Reloaded service \'php-fpm\'')
+        self.service['nginx'].restart()
+        self.service['php-fpm'].restart()
     
     def _generate_nginx_config(self):
         """
@@ -248,7 +251,7 @@ class _NGUtilSite(_NGUtilCommon):
         self.mkfile(metadata_site, contents=json.dumps(metadata_json))
         self.feedback.success('Created site metadata -> {0}'.format(metadata_site))
         
-    def define(self, params):
+    def _define(self, params):
         """
         Define attributes for creating a new site definition.
         """
@@ -295,10 +298,14 @@ class _NGUtilSite(_NGUtilCommon):
         # Merge with site properties
         self.properties = params
 
-    def create(self):
+    def create(self, args):
         """
         Create the site definition.
         """
+        self.feedback.info('Preparing to setup NGINX site')
+        
+        # Run internal methods
+        self._define(args)
         self._create_dirs()
         self._setup_ssl_certs()
         self._generate_nginx_config()
