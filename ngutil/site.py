@@ -319,5 +319,5 @@ class _NGUtilSite(_NGUtilCommon):
             '> Default Doc: /srv/www/{0}/{1}'.format(self.properties['fqdn'], 'index.php' if not self.properties['default_doc'] else self.properties['default_doc']),
             '> Logs:        /srv/www/{0}/logs'.format(self.properties['fqdn']),
             '> Active:      {0}\n'.format('Yes -> {0}'.format('/etc/nginx/sites-enabled/{0}.conf'.format(self.properties['fqdn'])) if self.properties['activate'] else 'No'),
-            'You can activate the site using: ngutil activate_site --fqdn "{0}"'.format(self.properties['fqdn'])
+            'You can activate the site using: ngutil enable_site --fqdn "{0}"'.format(self.properties['fqdn'])
         ], 'COMPLETE')
