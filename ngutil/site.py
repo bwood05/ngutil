@@ -57,6 +57,15 @@ class _NGUtilSite(_NGUtilCommon):
             shutil.copy(self.properties['ssl_key'], _key_dst)
             self.feedback.success('Deployed SSL key -> {0}'.format(_key_dst))
 
+    def _get_source(self):
+        """
+        Retrieve source code to put in the document root.
+        """
+        if self.properties['source']:
+
+            # Remote protocols
+            remote_proto = ['http', 'https', 'ftp']
+
     def _create_dirs(self):
         """
         Create any required site directories.
@@ -168,10 +177,8 @@ class _NGUtilSite(_NGUtilCommon):
             self.feedback.success('Disabled site \'{0}\''.format(params['fqdn']))
     
             # Restart services
-            self.run_command('service nginx reload', shell=True)
-            self.feedback.success('Reloaded service \'nginx\'')
-            self.run_command('service php-fpm reload', shell=True)
-            self.feedback.success('Reloaded service \'php-fpm\'')
+            self.service['nginx'].restart()
+            self.service['php-fpm'].restart()
                 
     def enable(self, params):
         """
@@ -244,7 +251,8 @@ class _NGUtilSite(_NGUtilCommon):
                 'available': '/etc/nginx/sites-available/{0}.conf'.format(self.properties['fqdn']),
                 'enabled': '/etc/nginx/sites-enabled/{0}.conf'.format(self.properties['fqdn'])           
             },
-            'ssl': self.ssl
+            'ssl': self.ssl,
+            'source': self.properties.get('source', False)
         }
         
         # Write the site metadata

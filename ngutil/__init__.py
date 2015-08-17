@@ -64,6 +64,7 @@ class _NGUtilArgs(_NGUtilCommon):
         self.parser.add_argument('-C', '--ssl-cert', help='Location of the SSL certificate for the site', action='append')
         self.parser.add_argument('-K', '--ssl-key', help='Location of the SSL key for the site', action='append')
         self.parser.add_argument('-f', '--force', help='Force a re-run of the initial setup utility', action='store_true')
+        self.parser.add_argument('-S', '--source', help='Specify a local or remote location to retrieve the site code base', action='append')
       
         # Parse CLI arguments
         sys.argv.pop(0)
