@@ -23,7 +23,8 @@ $ ngutil setup -f
 $ ngutil create_site -n "some.site.com"
 
 # Create an HTTPS with a custom default document and activate
-$ ngutil create_site -n "some.site.com" -d "index.html" -s -a -K "/path/to/ssl.key" -C "/path/to/ssl.crt"
+$ ngutil create_site -n "some.site.com" -d "index.html" \
+> -s -a -K "/path/to/ssl.key" -C "/path/to/ssl.crt"
 
 # List all managed sites
 $ ngutil list_sites
