@@ -10,45 +10,28 @@ $ cd ngutil
 $ python setup.py install
 ```
 
-#create_site.sh options
- -n (required)
- 
- FQDN of the site to be created e.g. subdomain.domain.tld.
+### Basic Usage
+```sh
 
- -a (optional)
- 
- Actives the site by creating a symlink from sites-available to sites-enabled.
+# Setup NGINX
+$ ngutil setup
 
- -d (optional)
- 
- Sets the decault document for the site.
+# Force reconfiguration of NGINX
+$ ngutil setup -f
 
- -s (optional)
- 
- configures the site to use SSL -K and -C are required with this option.
+# Create a plain HTTP site
+$ ngutil create_site -n "some.site.com"
 
- -C (required if -s is specified)
- 
- location of the SSL certificate for the site.
+# Create an HTTPS with a custom default document and activate
+$ ngutil create_site -n "some.site.com" -d "index.html" -s -a -K "/path/to/ssl.key" -C "/path/to/ssl.crt"
 
- -K (required if -s is specified)
- 
- location of the SSL key for the site.
+# List all managed sites
+$ ngutil list_sites
 
-Examples
+# Activate a managed site. This creates a symlink to '/etc/nginx/sites-enabled'
+$ ngutil enable_site -n "some.site.com"
 
-```sh create_site.sh -n subdomain.domain.tld```
+# Deactivate a managed site. This removes the symlink in '/etc/nginx/sites-enabled'
+$ ngutil disable_site -n "some.site.com"
 
-Creates the nginx and php-fpm config files for subdomain.domain.tld, but leaves it inactive.
-
-```sh create_site.sh -n subdomain.domain.tld -d index.php```
-
-Creates the nginx and php-fpm config files for subdomain.domain.tld, leaves it inactive, and sets the default document to index.php.
-
-```sh create_site.sh -n subdomain.domain.tld -a```
-
-Creates the nginx and php-fpm config files for subdomain.domain.tld and activates it.
-
-```sh create_site.sh -n subdomain.domain.tld -s -C ~\cert.crt -K ~\key.key```
-
-Creates the nginx and php-fpm config files for subdomain.domain.tld
+```
