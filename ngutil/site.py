@@ -36,8 +36,7 @@ class _NGUtilSite(_NGUtilCommon):
         
         # Service handlers
         self.service = {
-            'nginx':   _NGUtilService('nginx'),
-            'php-fpm': _NGUtilService('php-fpm')
+            'nginx':   _NGUtilService('nginx')
         }
 
     def _setup_ssl_certs(self):
@@ -105,7 +104,6 @@ class _NGUtilSite(_NGUtilCommon):
                 
             # Restart services
             self.service['nginx'].restart()
-            self.service['php-fpm'].restart()
              
     def list_all(self):
         """
@@ -178,7 +176,6 @@ class _NGUtilSite(_NGUtilCommon):
     
             # Restart services
             self.service['nginx'].restart()
-            self.service['php-fpm'].restart()
                 
     def enable(self, params):
         """
@@ -213,7 +210,6 @@ class _NGUtilSite(_NGUtilCommon):
     
         # Restart services
         self.service['nginx'].restart()
-        self.service['php-fpm'].restart()
     
     def _generate_nginx_config(self):
         """
