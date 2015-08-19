@@ -5,7 +5,7 @@ import argparse
 from platform import linux_distribution
 
 # Package version / root
-__version__ = '0.1-1'
+__version__ = '0.1-2'
 __root__    = os.path.abspath(os.path.dirname(__file__))
 
 # NGUtil Libraries
