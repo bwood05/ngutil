@@ -45,9 +45,9 @@ class _NGUtilArgs(_NGUtilCommon):
             'setup:        Setup  NGINX and PHP-FPM\n'
             'create_site:  Create a new NGINX site definition\n'
             'enable_site:  Link an available site in "/etc/nginx/sites-enabled"\n'
-            'disable_site: Remove a site from "/etc/nginx/sites-enabled"\n',
-            'config_api:   Run the embedded API server configuration\n',
-            'list_sites:   List all managed sites'
+            'disable_site: Remove a site from "/etc/nginx/sites-enabled"\n'
+            'list_sites:   List all managed sites\n'
+            'config_api:   Run the embedded API server configuration'
         )
         
     def _construct(self):
