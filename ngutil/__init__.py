@@ -45,7 +45,8 @@ class _NGUtilArgs(_NGUtilCommon):
             'setup:        Setup  NGINX and PHP-FPM\n'
             'create_site:  Create a new NGINX site definition\n'
             'enable_site:  Link an available site in "/etc/nginx/sites-enabled"\n'
-            'disable_site: Remove a site from "/etc/nginx/sites-enabled"\n'
+            'disable_site: Remove a site from "/etc/nginx/sites-enabled"\n',
+            'config_api:   Run the embedded API server configuration\n',
             'list_sites:   List all managed sites'
         )
         
@@ -119,7 +120,7 @@ class NGUtil(_NGUtilCommon):
         
         # Supported distributions / versions
         supported = {
-            'centos': ['6']    
+            'centos': ['6'] 
         }
         
         # Get the current distro / major version
@@ -165,6 +166,16 @@ class NGUtil(_NGUtilCommon):
         """
         self.site.enable(self.args.get())
         
+    def config_api(self):
+        """
+        Configure the embedded API server.
+        """
+        from .api.config import _NGUtilAPIConfig
+        
+        # Configuration object
+        api_config = _NGUtilAPIConfig()
+        api_config.run()
+        
     def setup(self):
         """
         Setup the NGINX server.
@@ -180,6 +191,7 @@ class NGUtil(_NGUtilCommon):
             'enable_site': self.enable_site,
             'disable_site': self.disable_site,
             'list_sites': self.list_sites,
+            'config_api': self.config_api,
             'setup': self.setup
         }
         

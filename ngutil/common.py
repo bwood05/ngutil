@@ -1,3 +1,4 @@
+import json
 from pwd import getpwnam
 from grp import getgrnam
 from sys import exit, stderr
@@ -41,6 +42,23 @@ class _NGUtilCommon(object):
         Map a file to the data directory.
         """
         return '{0}/{1}'.format(self._DATA, FILE)
+        
+    def read_file(self, file, json=False):
+        """
+        Read in the contents of a file.
+        """
+        if not path.isfile(file):
+            return None
+            
+        # Read the file
+        fh = open(file, 'r')
+        fc = fh.read()
+        fh.close()
+        
+        # Return the file contents
+        if json:
+            return json.reads(fc)
+        return fc
         
     def mkpath(self, _path):
         """
