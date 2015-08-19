@@ -1,2 +1,3 @@
 include DESCRIPTION.rst
 include ngutil/data/*
+include ngutil/api/*
