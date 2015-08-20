@@ -36,3 +36,18 @@ $ ngutil enable_site -n "some.site.com"
 $ ngutil disable_site -n "some.site.com"
 
 ```
+
+### API Server
+The embedded API server is still experimental. The following shows how to configure and debug the embedded server:
+```sh
+
+# Configure the API server
+$ ngutil api_config
+
+# Start the server in the current shell
+$ ngutil api_debug
+
+# In a new shell, try the following command
+$ curl --header "x-api-user: <username>" --header "x-api-key: <key>" -X GET http://<ipaddr>:<port>/site
+
+```
