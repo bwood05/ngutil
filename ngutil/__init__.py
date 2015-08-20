@@ -9,9 +9,10 @@ __version__ = '0.1-2'
 __root__    = os.path.abspath(os.path.dirname(__file__))
 
 # NGUtil Libraries
-from .site import _NGUtilSite
-from .common import _NGUtilCommon
-from .application import _NGUtilApp
+from ngutil.site import _NGUtilSite
+from ngutil.application import _NGUtilApp
+from ngutil.api.config import _NGUtilAPIConfig
+from ngutil.common import _NGUtilCommon, R_OBJECT, R_FATAL
 
 class _NGUtilArgs(_NGUtilCommon):
     """
@@ -24,8 +25,13 @@ class _NGUtilArgs(_NGUtilCommon):
         self.parser  = None
         self._args   = None
         
-        # Construct arguments
-        self._construct()
+        # Construct command line arguments
+        if not kwargs:
+            self._construct_cli()
+        
+        # Construct module level arguments
+        else:
+            self._args = kwargs
         
     def list(self):
         """
@@ -50,9 +56,9 @@ class _NGUtilArgs(_NGUtilCommon):
             'config_api:   Run the embedded API server configuration'
         )
         
-    def _construct(self):
+    def _construct_cli(self):
         """
-        Construct the argument parser.
+        Construct the command line argument parser.
         """
         
         # Create a new argument parsing object and populate the arguments
@@ -100,11 +106,11 @@ class NGUtil(_NGUtilCommon):
     """
     Public class used when invoking 'ngutil'.
     """
-    def __init__(self, **kwargs):
+    def __init__(self, is_cli=True, **kwargs):
         super(NGUtil, self).__init__()
         
-        # Check effective user
-        self._check_user()
+        # Running from the command line or not
+        self.is_cli = is_cli
         
         # Application / site manager
         self.app    = _NGUtilApp()
@@ -129,48 +135,56 @@ class NGUtil(_NGUtilCommon):
     
         # Make sure the distribution is supported
         if not this_distro in supported:
-            self.die('Current distribution \'{0}\' not supported...'.format(this_distro))
+            return R_FATAL(
+                msg  = 'Current distribution \'{0}\' not supported...'.format(this_distro),
+                code = 501
+            )
     
         # Make sure the version is supported
         if not this_version in supported[this_distro]:
-            self.die('Current version \'{0}\' not supported for this distribution...'.format(this_version))
+            return R_FATAL(
+                msg  = 'Current version \'{0}\' not supported for this distribution...'.format(this_version),
+                code = 501
+            )
     
     def _check_user(self):
         """
         Make sure the module is being run as root.
         """
         if not os.geteuid() == 0:
-            self.die('ngutil must be run as root user...')
+            return R_FATAL(
+                msg  = 'ngutil must be run as root user...',
+                code = 501
+            )
     
     def create_site(self):
         """
         Create a new NGINX site.
         """
-        self.site.create(self.args.get())
+        return self.site.create(self.args.get())
         
     def list_sites(self):
         """
         List all managed NGINX sites.
         """
-        self.site.list_all()
+        return self.site.list_all()
         
     def disable_site(self):
         """
         Disable an NGINX site.
         """
-        self.site.disable(self.args.get())
+        return self.site.disable(self.args.get())
         
     def enable_site(self):
         """
         Enable an NGINX site.
         """
-        self.site.enable(self.args.get())
+        return self.site.enable(self.args.get())
         
     def config_api(self):
         """
         Configure the embedded API server.
         """
-        from .api.config import _NGUtilAPIConfig
         
         # Configuration object
         api_config = _NGUtilAPIConfig()
@@ -180,7 +194,7 @@ class NGUtil(_NGUtilCommon):
         """
         Setup the NGINX server.
         """
-        self.app.setup(self.args.get())
+        return self.app.setup(self.args.get())
     
     def _action_mapper(self):
         """
@@ -200,16 +214,49 @@ class NGUtil(_NGUtilCommon):
         Run from the command line.
         """
         
+        # Check effective user / supported OS
+        for check in [self._check_user, self._check_support]:
+            check_rsp = check()
+            
+            # If any of the checks failed
+            if check_rsp.fatal:
+                
+                # Run from the command line
+                if self.is_cli:
+                    self.die(check_rsp.body)
+                    
+                # Run from module import
+                else:
+                    return check_rsp
+        
         # Target action / action mapper
         action = self.args.get('action')
         mapper = self._action_mapper()
         
         # Make sure the action is valid
         if not action in mapper:
-            self.die('\'action\' argument must be one of: {0}'.format(mapper.keys()))
+            action_rsp = R_FATAL(
+                msg  = '\'action\' argument must be one of: {0}'.format(mapper.keys()),
+                code = 404
+            )
+            
+            # Run from the command line
+            if self.is_cli:
+                self.die(action_rsp.body)
+                
+            # Run from module import
+            else:
+                return action_rsp
             
         # Run the action method
-        mapper[action]()
+        mapper_rsp = mapper[action]()
+        
+        # If the response is fatal
+        if mapper_rsp.fatal:
+            if self.is_cli:
+                self.die(mapper_rsp.body)
+            else:
+                return mapper_rsp
         
 def cli():
     """

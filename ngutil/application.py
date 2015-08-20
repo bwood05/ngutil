@@ -10,10 +10,10 @@ except:
     pass
 
 # NGUtil Libraries
-from .service import _NGUtilService
-from .common import _NGUtilCommon, _NGUtilSELinux
-from .template import _NGUtilTemplates
-from .iptables import _NGUtilIPTables
+from ngutil.service import _NGUtilService
+from ngutil.common import _NGUtilCommon, _NGUtilSELinux
+from ngutil.template import _NGUtilTemplates
+from ngutil.iptables import _NGUtilIPTables
 
 class _NGUtilApp(_NGUtilCommon):
     """

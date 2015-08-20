@@ -2,7 +2,7 @@ from pwd import getpwnam
 from os import path, makedirs, chown, chmod
 
 # NGUtil Libraries
-from .common import _NGUtilCommon
+from ngutil.common import _NGUtilCommon
 
 class _NGUtilTemplates(_NGUtilCommon):
     """

@@ -9,6 +9,22 @@ from os import path, makedirs, chown, listdir
 # ngutil
 from ngutil import __root__
 
+class R_OBJECT(object):
+    """
+    Response class object.
+    """
+    def __init__(msg, code, fatal=False):
+        self.body  = msg
+        self.code  = code
+        self.fatal = fatal
+        
+class R_FATAL(R_OBJECT):
+    """
+    Fatal response class object.
+    """
+    def __init__(msg, code):
+        super(R_FATAL, self).__init__(msg, code, fatal=True)
+
 class _NGUtilCommon(object):
     """
     Common class for sharing methods and attributes between NGUtil classes.
