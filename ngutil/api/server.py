@@ -1,4 +1,5 @@
 from __future__ import print_function
+import re
 import json
 from urlparse import parse_qsl
 from SocketServer import TCPServer
@@ -6,6 +7,7 @@ from sys import exit, stderr
 from traceback import format_exc
 from cgi import parse_header, parse_multipart
 from BaseHTTPServer import BaseHTTPRequestHandler
+from base64 import b64decode
 
 # ngutil
 from ngutil.common import _NGUtilCommon
@@ -44,31 +46,30 @@ class _ServerBase(BaseHTTPRequestHandler):
         Authenticate against header information.
         """
         
-        # Authentication headers
-        auth_headers = {
-            'x-api-user': 'user',
-            'x-api-key':  'key'
-        }
-        
         # API configuration / incoming headers
         api_config  = get_api_config()
         api_headers = self.headers.dict
         
-        # Make sure required headers are set
-        for k in auth_headers.keys():
-            if not k in api_headers:
-                self.send_response(401)
-                self.send_header('Content-type', 'text/plain')
-                self.end_headers()
-                return False
+        # Make sure the authorization header is set
+        if not 'authorization' in api_headers:
+            self.send_response(401)
+            self.send_header('Content-type', 'text/plain')
+            self.send_header('WWW-Authenticate', 'Basic')
+            self.end_headers()
+            return False
+        
+        # Extract username/key
+        auth_decoded = b64decode(re.compile(r'^Basic (.*$)').sub(r'\g<1>', api_headers['authorization']))
+        auth_user    = re.compile(r'(^[^:]+):.*$').sub(r'\g<1>', auth_decoded).rstrip()
+        auth_key     = re.compile(r'^[^:]+:(.*$)').sub(r'\g<1>', auth_decoded).rstrip()
         
         # Validate authentication parameters
-        for h_key, c_key in auth_headers.iteritems():
-            if not api_headers[h_key] == api_config[c_key]:
-                self.send_response(401)
-                self.send_header('Content-type', 'text/plain')
-                self.end_headers()
-                return False
+        if not api_config['user'] == auth_user or not api_config['key'] == auth_key:
+            self.send_response(401)
+            self.send_header('Content-type', 'text/plain')
+            self.send_header('WWW-Authenticate', 'Basic')
+            self.end_headers()
+            return False
         
         # Authentication success
         return True

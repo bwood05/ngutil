@@ -177,6 +177,7 @@ class _NGUtilSite(_NGUtilCommon):
         """
         Disable an existing site.
         """
+        self._args = params
         
         # Target site
         target_site = params.get('fqdn', None)
@@ -221,6 +222,7 @@ class _NGUtilSite(_NGUtilCommon):
         """
         Enable an existing site.
         """
+        self._args = params
         
         # Target site
         target_site = params.get('fqdn', None)
@@ -294,7 +296,7 @@ class _NGUtilSite(_NGUtilCommon):
         
          # Site metadata location
         metadata_dir  = '/root/.ngutil/metadata'
-        metadata_site = '{0}/{1}.json'.format(metadata_dir, self.properties['fqdn'])
+        metadata_site = '{0}/{1}.json'.format(metadata_dir, self._args['fqdn'])
         
         # Open and read the metadata
         metadata_json = None
@@ -304,7 +306,7 @@ class _NGUtilSite(_NGUtilCommon):
         # Update any metadata
         for k,v in values.iteritems():
             metadata_json[k] = v
-            self.feedback.success('Updated site \'{0}\' metadata: key={1}, value={2}'.format(self.properties['fqdn'], k, str(v)))
+            self.feedback.success('Updated site \'{0}\' metadata: key={1}, value={2}'.format(self._args['fqdn'], k, str(v)))
             
         # Write out the updated metadata
         with open(metadata_site, 'w') as file:
@@ -329,7 +331,7 @@ class _NGUtilSite(_NGUtilCommon):
                 'available': '/etc/nginx/sites-available/{0}.conf'.format(self.properties['fqdn']),
                 'enabled': '/etc/nginx/sites-enabled/{0}.conf'.format(self.properties['fqdn'])           
             },
-            'active': self.properties.get('activate'),
+            'active': self.properties.get('activate', False),
             'ssl': self.ssl,
             'doc_root': '/srv/www/{0}'.format(self.properties['fqdn']),
             'default_doc': 'index.php' if not (self.properties.get('default_doc')) else self.properties['default_doc']
