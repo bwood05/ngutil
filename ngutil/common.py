@@ -13,7 +13,7 @@ class R_OBJECT(object):
     """
     Response class object.
     """
-    def __init__(msg, code, fatal=False):
+    def __init__(self, msg, code, fatal=False):
         self.body  = msg
         self.code  = code
         self.fatal = fatal
@@ -22,7 +22,7 @@ class R_FATAL(R_OBJECT):
     """
     Fatal response class object.
     """
-    def __init__(msg, code):
+    def __init__(self, msg, code):
         super(R_FATAL, self).__init__(msg, code, fatal=True)
 
 class _NGUtilCommon(object):
