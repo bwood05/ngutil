@@ -414,6 +414,6 @@ class _NGUtilSite(_NGUtilCommon):
 
         # Return a response object
         return R_OBJECT(
-            msg  = self.metadata_json,
+            msg  = self.metadata,
             code = 200
         )
