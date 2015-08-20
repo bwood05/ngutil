@@ -208,6 +208,9 @@ class _NGUtilSite(_NGUtilCommon):
             # Restart services
             self.service['nginx'].restart()
             
+            # Update the site metadata
+            self._update_metadata({'active': False})
+            
             # Return a response object
             return R_OBJECT(
                 msg  = self.feedback.success('Disabled site \'{0}\''.format(params['fqdn'])),
@@ -255,6 +258,9 @@ class _NGUtilSite(_NGUtilCommon):
         # Restart services
         self.service['nginx'].restart()
         
+        # Update the site metadata
+        self._update_metadata({'active': True})
+        
         # Return a response object
         return R_OBJECT(
             msg  = self.feedback.success('Enabled site -> {0}'.format(site_config['enabled'])),
@@ -281,6 +287,29 @@ class _NGUtilSite(_NGUtilCommon):
         # Return a response object
         return R_OBJECT(msg='OK', code=200)
         
+    def _update_metadata(self, values):
+        """
+        Update a site's metadata.
+        """
+        
+         # Site metadata location
+        metadata_dir  = '/root/.ngutil/metadata'
+        metadata_site = '{0}/{1}.json'.format(metadata_dir, self.properties['fqdn'])
+        
+        # Open and read the metadata
+        metadata_json = None
+        with open(metadata_site, 'r') as file:
+            metadata_json = json.loads(file.read())
+        
+        # Update any metadata
+        for k,v in values.iteritems():
+            metadata_json[k] = v
+            self.feedback.success('Updated site \'{0}\' metadata: key={1}, value={2}'.format(self.properties['fqdn'], k, str(v)))
+            
+        # Write out the updated metadata
+        with open(metadata_site, 'w') as file:
+            file.write(json.dumps(metadata_json))
+        
     def _set_metadata(self):
         """
         Create metadata entry for site.
@@ -300,8 +329,10 @@ class _NGUtilSite(_NGUtilCommon):
                 'available': '/etc/nginx/sites-available/{0}.conf'.format(self.properties['fqdn']),
                 'enabled': '/etc/nginx/sites-enabled/{0}.conf'.format(self.properties['fqdn'])           
             },
+            'active': self.properties.get('activate'),
             'ssl': self.ssl,
-            'source': self.properties.get('source', False)
+            'doc_root': '/srv/www/{0}'.format(self.properties['fqdn']),
+            'default_doc': 'index.php' if not (self.properties.get('default_doc')) else self.properties['default_doc']
         }
         
         # Write the site metadata
