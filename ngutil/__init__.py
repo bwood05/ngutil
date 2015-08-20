@@ -258,11 +258,11 @@ class NGUtil(_NGUtilCommon):
         mapper_rsp = mapper[action]()
         
         # If the response is fatal
-        if mapper_rsp.fatal:
-            if self.is_cli:
-                self.die(mapper_rsp.body)
-            else:
-                return mapper_rsp
+        if mapper_rsp.fatal and self.is_cli:
+            self.die(mapper_rsp.body)
+                
+        # Return the response
+        return mapper_rsp
         
 def cli():
     """
