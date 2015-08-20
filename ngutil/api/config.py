@@ -57,13 +57,15 @@ class _NGUtilAPIConfig(_NGUtilCommon):
         self.feedback.input('Please enter a username to connect to the embedded API server (ngadmin): ', key='username', default='ngadmin')
         self.feedback.input('Please enter the IP address to bind to (0.0.0.0): ', key='ipaddr', default='0.0.0.0')
         self.feedback.input('Please enter the port to bind to (10557): ', key='port', default=10557)
+        self.feedback.input('Please enter the path to an optional SSL certificate: ', key='ssl_cert', default=False)
         
         # Store the API parameters
         self.api_config = {
-            'user':   self.feedback.get_response('username'),
-            'key':    self._generate_key(),
-            'ipaddr': self.feedback.get_response('ipaddr'),
-            'port':   self.feedback.get_response('port')
+            'user':     self.feedback.get_response('username'),
+            'key':      self._generate_key(),
+            'ipaddr':   self.feedback.get_response('ipaddr'),
+            'port':     self.feedback.get_response('port'),
+            'ssl_cert': self.feedback.get_response('ssl_cert')
         }
         
         # Write out the config

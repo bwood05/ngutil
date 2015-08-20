@@ -1,6 +1,8 @@
 from __future__ import print_function
 import re
+import ssl
 import json
+from os import path
 from urlparse import parse_qsl
 from SocketServer import TCPServer
 from sys import exit, stderr
@@ -184,6 +186,13 @@ class _NGUtilAPIServer(_NGUtilCommon):
         
         # Socket server
         api_socket = TCPServer((api_config['ipaddr'], api_config['port']), _ServerBase)
+        
+        # Check for SSL support
+        if api_config.get('ssl_cert'):
+            if path.isfile(api_config['ssl_cert']):
+                api_socket.socket = ssl.wrap_socket(api_socket.socket, certfile=api_config['ssl_cert'], server_side=True)
+            else:
+                self.feedback.warn('Starting in insecure (HTTP) mode, could not locate SSL certificate: {0}'.format(api_config['ssl_cert']))
             
         # Keep the server running
         api_socket.serve_forever()
