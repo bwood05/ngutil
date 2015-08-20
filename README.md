@@ -47,7 +47,8 @@ $ ngutil api_config
 # Start the server in the current shell
 $ ngutil api_debug
 
-# In a new shell, try the following command
-$ curl --header "x-api-user: <username>" --header "x-api-key: <key>" -X GET http://<ipaddr>:<port>/site
+# In a new shell, try the following commands
+$ AUTH_HEADER="Authorization: Basic $(echo "<api_user>:<api_key>" | base64)"
+$ curl --header "$AUTH_HEADER" -X GET http://<ipaddr>:<port>/site
 
 ```
