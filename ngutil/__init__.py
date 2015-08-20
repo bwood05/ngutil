@@ -146,6 +146,9 @@ class NGUtil(_NGUtilCommon):
                 msg  = 'Current version \'{0}\' not supported for this distribution...'.format(this_version),
                 code = 501
             )
+            
+        # Return a response object
+        return R_OBJECT(msg='OK', code=200)
     
     def _check_user(self):
         """
@@ -156,6 +159,9 @@ class NGUtil(_NGUtilCommon):
                 msg  = 'ngutil must be run as root user...',
                 code = 501
             )
+            
+        # Return a response object
+        return R_OBJECT(msg='OK', code=200)
     
     def create_site(self):
         """
