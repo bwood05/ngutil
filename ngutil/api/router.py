@@ -21,7 +21,7 @@ class _NGUtilAPIRouter(object):
         self.params['action'] = self.action
         
         # Setup the request
-        request = NGUtil(is_cli=False, self.params)
+        request = NGUtil(is_cli=False, **self.params)
         
         # Run and return the response
         return request.run()
