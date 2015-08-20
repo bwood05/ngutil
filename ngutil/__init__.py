@@ -131,7 +131,7 @@ class NGUtil(_NGUtilCommon):
         
         # Get the current distro / major version
         this_distro  = linux_distribution()[0].lower()
-        this_version = re.compile(r'(^[0-9]+)\..*$').sub(r'\g<1>', linux_distribution[1])
+        this_version = re.compile(r'(^[0-9]+)\..*$').sub(r'\g<1>', linux_distribution()[1])
     
         # Make sure the distribution is supported
         if not this_distro in supported:
