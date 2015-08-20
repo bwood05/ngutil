@@ -28,8 +28,9 @@ class _NGUtilSite(_NGUtilCommon):
             'key': None
         }
 
-        # Site properties
+        # Site properties / metadata
         self.properties = {}
+        self.metadata   = None
 
         # Required / optional params
         self.params = {
@@ -104,7 +105,7 @@ class _NGUtilSite(_NGUtilCommon):
         """
         Optionally activate the site.
         """
-        if self.properties['activate']:
+        if self.properties.get('activate'):
             if not path.isfile(self.site_config['enabled']):
                 symlink(self.site_config['available'], self.site_config['enabled'])
                 self.feedback.success('Activated site -> {0}'.format(self.site_config['enabled']))
@@ -271,7 +272,7 @@ class _NGUtilSite(_NGUtilCommon):
         # Update placeholder variables
         self.template.setvars({
             'SITENAME': self.properties['fqdn'],
-            'DEFAULTDOC': 'index.php' if not self.properties['default_doc'] else self.properties['default_doc']
+            'DEFAULTDOC': 'index.php' if not (self.properties.get('default_doc')) else self.properties['default_doc']
         })
     
         # Deploy the configuration
@@ -306,6 +307,9 @@ class _NGUtilSite(_NGUtilCommon):
         # Write the site metadata
         self.mkfile(metadata_site, contents=json.dumps(metadata_json))
         self.feedback.success('Created site metadata -> {0}'.format(metadata_site))
+        
+        # Store the site metadata
+        self.metadata = metadata_json
         
         # Return a response object
         return R_OBJECT(msg='OK', code=200)
@@ -402,14 +406,14 @@ class _NGUtilSite(_NGUtilCommon):
         self.feedback.block([
             'SITE CREATED:  {0}://{1}'.format('https' if self.ssl['enable'] else 'http', self.properties['fqdn']),
             '> Web Root:    /srv/www/{0}'.format(self.properties['fqdn']),
-            '> Default Doc: /srv/www/{0}/{1}'.format(self.properties['fqdn'], 'index.php' if not self.properties['default_doc'] else self.properties['default_doc']),
+            '> Default Doc: /srv/www/{0}/{1}'.format(self.properties['fqdn'], 'index.php' if not self.properties.get('default_doc') else self.properties['default_doc']),
             '> Logs:        /srv/www/{0}/logs'.format(self.properties['fqdn']),
-            '> Active:      {0}\n'.format('Yes -> {0}'.format('/etc/nginx/sites-enabled/{0}.conf'.format(self.properties['fqdn'])) if self.properties['activate'] else 'No'),
+            '> Active:      {0}\n'.format('Yes -> {0}'.format('/etc/nginx/sites-enabled/{0}.conf'.format(self.properties['fqdn'])) if self.properties.get('activate') else 'No'),
             'You can activate the site using: ngutil enable_site --fqdn "{0}"'.format(self.properties['fqdn'])
         ], 'COMPLETE')
 
         # Return a response object
         return R_OBJECT(
-            msg  = self.properties,
+            msg  = self.metadata_json,
             code = 200
         )

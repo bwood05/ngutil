@@ -53,7 +53,8 @@ class _NGUtilArgs(_NGUtilCommon):
             'enable_site:  Link an available site in "/etc/nginx/sites-enabled"\n'
             'disable_site: Remove a site from "/etc/nginx/sites-enabled"\n'
             'list_sites:   List all managed sites\n'
-            'config_api:   Run the embedded API server configuration'
+            'api_config:   Run the embedded API server configuration\n',
+            'api_debug:    Run the API server in the current shell'
         )
         
     def _construct_cli(self):
@@ -187,7 +188,7 @@ class NGUtil(_NGUtilCommon):
         """
         return self.site.enable(self.args.get())
         
-    def config_api(self):
+    def api_config(self):
         """
         Configure the embedded API server.
         """
@@ -195,6 +196,15 @@ class NGUtil(_NGUtilCommon):
         # Configuration object
         api_config = _NGUtilAPIConfig()
         api_config.run()
+        
+    def api_debug(self):
+        """
+        Run the API server in the current shell.
+        """
+        from ngutil.api.server import _NGUtilAPIServer
+
+        # Start the server
+        server = _NGUtilAPIServer()
         
     def setup(self):
         """
@@ -211,7 +221,8 @@ class NGUtil(_NGUtilCommon):
             'enable_site': self.enable_site,
             'disable_site': self.disable_site,
             'list_sites': self.list_sites,
-            'config_api': self.config_api,
+            'api_config': self.api_config,
+            'api_debug': self.api_debug,
             'setup': self.setup
         }
         

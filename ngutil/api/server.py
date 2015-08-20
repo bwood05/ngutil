@@ -1,7 +1,9 @@
+from __future__ import print_function
 import json
-from sys import exit, stderr
 from urlparse import parse_qsl
 from SocketServer import TCPServer
+from sys import exit, stderr
+from traceback import format_exc
 from cgi import parse_header, parse_multipart
 from BaseHTTPServer import BaseHTTPRequestHandler
 
@@ -87,12 +89,10 @@ class _ServerBase(BaseHTTPRequestHandler):
             
         # PUT / POST / DELETE parameters
         else:
-            ctype, pdict = parse_header(self.headers['content-type'])
-            if ctype == 'multipart/form-data':
-                return parse_multipart(self.rfile, pdict)
-            elif ctype == 'application/x-www-form-urlencoded':
-                return dict(parse_qsl(self.rfile.read(int(self.headers['content-length'])), keep_blank_values=1))
-            else:
+            clen = int(self.headers.get('content-length', 0))
+            try:
+                return json.loads(self.rfile.read(clen))
+            except:
                 return {}
     
     def _route_request(self):
@@ -120,6 +120,7 @@ class _ServerBase(BaseHTTPRequestHandler):
         
         # Internal error when routing the request
         except Exception as e:
+            print(format_exc())
             self._set_headers(code=500)
             self.wfile.write(str(e))
     
