@@ -13,7 +13,7 @@ class R_OBJECT(object):
     """
     Response class object.
     """
-    def __init__(self, msg, code, fatal=False):
+    def __init__(self, msg='OK', code=200, fatal=False):
         self.body  = msg
         self.code  = code
         self.fatal = fatal

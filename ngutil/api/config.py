@@ -4,7 +4,7 @@ from string import ascii_uppercase, ascii_lowercase, digits
 from random import SystemRandom
 
 # ngutil
-from ngutil.common import _NGUtilCommon
+from ngutil.common import _NGUtilCommon, R_OBJECT, R_FATAL
 
 class _NGUtilAPIConfig(_NGUtilCommon):
     """
@@ -32,14 +32,23 @@ class _NGUtilAPIConfig(_NGUtilCommon):
         
         # Don't overwrite an existing config
         if path.isfile(self.config_file):
-            self.die('Cannot overwrite existing API configuration: {0}'.format(self.config_file))
+            return R_FATAL(
+                msg  = 'Cannot overwrite existing API configuration: {0}'.format(self.config_file),
+                code = 500
+            )
         
+        # Dump the API configuration
         try:
             with open(self.config_file, 'w') as file:
                 file.write(json.dumps(self.api_config))
-            self.feedback.success('Wrote out API configuration: {0}'.format(self.config_file))
+            return R_OBJECT(msg=self.feedback.success('Wrote out API configuration: {0}'.format(self.config_file)))
+        
+        # Failed to dump configuration
         except Exception as e:
-            self.die('Failed to write API configuration: {0}'.format(str(e)))
+            return R_FATAL(
+                msg  = 'Failed to write API configuration: {0}'.format(str(e)),
+                code = 500
+            )
             
     def run(self):
         """
@@ -57,7 +66,14 @@ class _NGUtilAPIConfig(_NGUtilCommon):
         self.feedback.input('Please enter a username to connect to the embedded API server (ngadmin): ', key='username', default='ngadmin')
         self.feedback.input('Please enter the IP address to bind to (0.0.0.0): ', key='ipaddr', default='0.0.0.0')
         self.feedback.input('Please enter the port to bind to (10557): ', key='port', default=10557)
-        self.feedback.input('Please enter the path to an optional SSL certificate: ', key='ssl_cert', default=False)
+        
+        # Ask if the user want's to configure SSL
+        self.feedback.input('Would you like to configure SSL? (y/n): ', key='ssl_enable', yes_no=True)
+        
+        # If configuring SSL
+        if self.feedback.get_response('ssl_enable'):
+            self.feedback.input('Please enter the path to your SSL certificate: ', key='ssl_cert')
+            self.feedback.input('Please enter the path to your SSL key: ', key='ssl_key')
         
         # Store the API parameters
         self.api_config = {
@@ -65,11 +81,17 @@ class _NGUtilAPIConfig(_NGUtilCommon):
             'key':      self._generate_key(),
             'ipaddr':   self.feedback.get_response('ipaddr'),
             'port':     self.feedback.get_response('port'),
-            'ssl_cert': self.feedback.get_response('ssl_cert')
+            'ssl':      {
+                'enable': self.feedback.get_response('ssl_enable'),
+                'cert':   self.feedback.get_response('ssl_cert'),
+                'key':    self.feedback.get_response('ssl_key')
+            }
         }
         
         # Write out the config
-        self._write_config()
+        wc_rsp = self._write_config()
+        if wc_rsp.fatal:
+            return wc_rsp
         
         # Display the configuration summary
         self.feedback.block([
@@ -82,3 +104,6 @@ class _NGUtilAPIConfig(_NGUtilCommon):
             '> API URL: http://{0}:{1}\n'.format(self.api_config['ipaddr'], str(self.api_config['port'])),
             'These values are stored in: {0}'.format(self.config_file)
         ], 'COMPLETE')
+        
+        # Return a response object
+        return R_OBJECT()

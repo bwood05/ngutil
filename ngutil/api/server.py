@@ -1,15 +1,17 @@
 from __future__ import print_function
 import re
-import ssl
 import json
 from os import path
-from urlparse import parse_qsl
-from SocketServer import TCPServer
+from ssl import SSLSocket
+from socket import socket
+from base64 import b64decode
 from sys import exit, stderr
+from urlparse import parse_qsl
 from traceback import format_exc
+from SocketServer import TCPServer
 from cgi import parse_header, parse_multipart
 from BaseHTTPServer import BaseHTTPRequestHandler
-from base64 import b64decode
+from BaseHTTPServer.HTTPServer import address_family, socket_type
 
 # ngutil
 from ngutil.common import _NGUtilCommon
@@ -187,12 +189,27 @@ class _NGUtilAPIServer(_NGUtilCommon):
         # Socket server
         api_socket = TCPServer((api_config['ipaddr'], api_config['port']), _ServerBase)
         
+        # SSL parameters
+        ssl_params = api_config.get('ssl')
+        
         # Check for SSL support
-        if api_config.get('ssl_cert'):
-            if path.isfile(api_config['ssl_cert']):
-                api_socket.socket = ssl.wrap_socket(api_socket.socket, certfile=api_config['ssl_cert'], server_side=True)
+        if ssl_params.get('enable', False):
+            ssl_cert = ssl_params.get('cert', None)
+            ssl_key  = ssl_params.get('key', None)
+        
+            # Make sure the certificate/key are valid
+            if path.isfile(ssl_cert) and path.isfile(ssl_key):
+            
+                # Wrap the socket in an SSL layer
+                api_socket.socket = SSLSocket(
+            		socket(address_family, socket_type),
+            		keyfile  = ssl_key,
+            		certfile = ssl_cert
+            	)
+            
+            # Certificate/keys not found or invalid
             else:
-                self.feedback.warn('Starting in insecure (HTTP) mode, could not locate SSL certificate: {0}'.format(api_config['ssl_cert']))
+                self.feedback.warn('Starting in insecure (HTTP) mode, certificate/key files not found.')
             
         # Keep the server running
         api_socket.serve_forever()

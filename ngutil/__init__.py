@@ -162,7 +162,7 @@ class NGUtil(_NGUtilCommon):
             )
             
         # Return a response object
-        return R_OBJECT(msg='OK', code=200)
+        return R_OBJECT()
     
     def create_site(self):
         """
