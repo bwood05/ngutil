@@ -197,10 +197,7 @@ class _NGUtilSite(_NGUtilCommon):
             
         # If the site isn't enabled
         if not path.isfile(site_config['enabled']):
-            return R_OBJECT(
-                msg  = self.feedback.info('Site already disabled...'),
-                code = 200
-            )
+            return R_OBJECT(msg = self.feedback.info('Site already disabled...'))
     
         # Disable the site
         else:
@@ -213,10 +210,7 @@ class _NGUtilSite(_NGUtilCommon):
             self._update_metadata({'active': False})
             
             # Return a response object
-            return R_OBJECT(
-                msg  = self.feedback.success('Disabled site \'{0}\''.format(params['fqdn'])),
-                code = 200
-            )
+            return R_OBJECT(msg = self.feedback.success('Disabled site \'{0}\''.format(params['fqdn'])))
                 
     def enable(self, params):
         """
@@ -249,10 +243,7 @@ class _NGUtilSite(_NGUtilCommon):
     
         # If the site is already active
         if path.isfile(site_config['enabled']):
-            return R_OBJECT(
-                msg  = self.feedback.info('Site \'{0}\' already enabled -> {1}'.format(target_site, site_config['enabled'])),
-                code = 200
-            )
+            return R_OBJECT(msg = self.feedback.info('Site \'{0}\' already enabled -> {1}'.format(target_site, site_config['enabled'])))
             
         # Activate the site
         symlink(site_config['available'], site_config['enabled'])
@@ -264,10 +255,7 @@ class _NGUtilSite(_NGUtilCommon):
         self._update_metadata({'active': True})
         
         # Return a response object
-        return R_OBJECT(
-            msg  = self.feedback.success('Enabled site -> {0}'.format(site_config['enabled'])),
-            code = 200
-        )
+        return R_OBJECT(msg = self.feedback.success('Enabled site -> {0}'.format(site_config['enabled'])))
     
     def _generate_nginx_config(self):
         """
@@ -287,7 +275,7 @@ class _NGUtilSite(_NGUtilCommon):
         self.template.deploy(overwrite=True)
         
         # Return a response object
-        return R_OBJECT(msg='OK', code=200)
+        return R_OBJECT()
         
     def _update_metadata(self, values):
         """
@@ -345,7 +333,7 @@ class _NGUtilSite(_NGUtilCommon):
         self.metadata = metadata_json
         
         # Return a response object
-        return R_OBJECT(msg='OK', code=200)
+        return R_OBJECT()
         
     def _define(self):
         """
@@ -407,7 +395,7 @@ class _NGUtilSite(_NGUtilCommon):
         self.properties = self._args
         
         # Return a response object
-        return R_OBJECT(msg='OK', code=200)
+        return R_OBJECT()
 
     def create(self, args):
         """
@@ -446,7 +434,4 @@ class _NGUtilSite(_NGUtilCommon):
         ], 'COMPLETE')
 
         # Return a response object
-        return R_OBJECT(
-            msg  = self.metadata,
-            code = 200
-        )
+        return R_OBJECT(msg = self.metadata)

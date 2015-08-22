@@ -11,7 +11,7 @@ except:
 
 # NGUtil Libraries
 from ngutil.service import _NGUtilService
-from ngutil.common import _NGUtilCommon, _NGUtilSELinux
+from ngutil.common import _NGUtilCommon, _NGUtilSELinux, R_OBJECT, R_FATAL
 from ngutil.template import _NGUtilTemplates
 from ngutil.iptables import _NGUtilIPTables
 
@@ -56,16 +56,27 @@ class _NGUtilApp(_NGUtilCommon):
         """
         
         # Create the iptables manager
-        iptables = _NGUtilIPTables()
-        iptables.select_table('filter')
-        
-        # Configure each rule
-        for rule in rules:
-            iptables.select_chain(rule.get('chain', 'INPUT'))
-            iptables.add_rule(rule.get('params'))
+        try:
+            iptables = _NGUtilIPTables()
+            iptables.select_table('filter')
             
-        # Save the iptables config
-        iptables.save(restart=True)
+            # Configure each rule
+            for rule in rules:
+                iptables.select_chain(rule.get('chain', 'INPUT'))
+                iptables.add_rule(rule.get('params'))
+                
+            # Save the iptables config
+            iptables.save(restart=True)
+        
+            # Return a response object
+            return R_OBJECT()
+        
+        # Failed to configure firewall
+        except Exception as e:
+            return R_FATAL(
+                msg  = 'Failed to configure firewall: {0}'.format(str(e)),
+                code = 500
+            )
         
     def _config_phpfpm(self):
         """
@@ -143,95 +154,114 @@ class _NGUtilApp(_NGUtilCommon):
         """
         Preflight check before running setup.
         """
+        try:
         
-        # SELinux manager
-        self.selinux  = _NGUtilSELinux()
-        
-        # Check if already setup
-        if path.isfile(self.marker) and not self.args.get('force', False):
-            self.die('Setup has already been run, use the \'-f\' flag to force a re-run...')
-        
-        # Preflight checks complete
-        self.feedback.info('Preparing to setup NGINX...')
+            # SELinux manager
+            self.selinux  = _NGUtilSELinux()
+            
+            # Check if already setup
+            if path.isfile(self.marker) and not self.args.get('force', False):
+                return R_FATAL(
+                    msg  = 'Setup has already been run, use the \'-f\' flag to force a re-run...',
+                    code = 400
+                )
+            
+            # Preflight checks complete
+            return R_OBJECT(msg = self.feedback.info('Preparing to setup NGINX...'))
+            
+        # Failed to run preflight checks
+        except Exception as e:
+            return R_FATAL(
+                msg  = 'Failed to run preflight checks: {0}'.format(str(e)),
+                code = 500
+            )
         
     def _install(self):
         """
         Make sure NGINX is installed.
         """
+        try:
         
-        # Add the NGINX repository
-        nginx_repo = '/etc/yum.repos.d/nginx.repo'
-        if not path.isfile(nginx_repo):
-            self.feedback.info('Preparing to configure NGINX repository \'{0}\''.format(nginx_repo))
-            self.template.setup('NG_REPO', nginx_repo)
-            self.template.deploy()
-        else:
-            self.feedback.info('NGINX repository \'{0}\' already exists, skipping...'.format(nginx_repo))
-        
-        # Download / install each repo
-        for repo, attrs in self.repos.iteritems():
-            
-            # Only install if the repo configuration hasn't been created
-            if not path.isfile(attrs['config']):
-                wget.download(attrs['upstream'], out=attrs['local'], bar=self._bar_none)
-                self.feedback.success('Fetched repository package: {0} -> {1}'.format(attrs['upstream'], attrs['local']))
-            
-                # Install the repository RPM
-                self.run_command('rpm -Uvh {0}'.format(attrs['local']))
-                self.feedback.success('Installed repository package: {0}'.format(attrs['local']))
-        
-                # WORKAROUND
-                # Can't access 'https' mirrors, so convert to 'http'
-                self._convert_https(attrs['config'])
-        
-                # Clean up the tmp package
-                unlink(attrs['local'])
+            # Add the NGINX repository
+            nginx_repo = '/etc/yum.repos.d/nginx.repo'
+            if not path.isfile(nginx_repo):
+                self.feedback.info('Preparing to configure NGINX repository \'{0}\''.format(nginx_repo))
+                self.template.setup('NG_REPO', nginx_repo)
+                self.template.deploy()
             else:
-                self.feedback.info('Repo provided by \'{0}\' already installed...'.format(attrs['upstream']))
-    
-        # Compile packages that need to be installed  
-        ts        = rpm.TransactionSet()
-        _packages = []
-        for pkg in self.packages:
-            pkg_obj = ts.dbMatch('name', pkg)
-            if pkg_obj.count() == 0:
-                _packages.append(pkg)
-                self.feedback.info('Marking package \'{0}\' for installation...'.format(pkg))
+                self.feedback.info('NGINX repository \'{0}\' already exists, skipping...'.format(nginx_repo))
+            
+            # Download / install each repo
+            for repo, attrs in self.repos.iteritems():
+                
+                # Only install if the repo configuration hasn't been created
+                if not path.isfile(attrs['config']):
+                    wget.download(attrs['upstream'], out=attrs['local'], bar=self._bar_none)
+                    self.feedback.success('Fetched repository package: {0} -> {1}'.format(attrs['upstream'], attrs['local']))
+                
+                    # Install the repository RPM
+                    self.run_command('rpm -Uvh {0}'.format(attrs['local']))
+                    self.feedback.success('Installed repository package: {0}'.format(attrs['local']))
+            
+                    # WORKAROUND
+                    # Can't access 'https' mirrors, so convert to 'http'
+                    self._convert_https(attrs['config'])
+            
+                    # Clean up the tmp package
+                    unlink(attrs['local'])
+                else:
+                    self.feedback.info('Repo provided by \'{0}\' already installed...'.format(attrs['upstream']))
+        
+            # Compile packages that need to be installed  
+            ts        = rpm.TransactionSet()
+            _packages = []
+            for pkg in self.packages:
+                pkg_obj = ts.dbMatch('name', pkg)
+                if pkg_obj.count() == 0:
+                    _packages.append(pkg)
+                    self.feedback.info('Marking package \'{0}\' for installation...'.format(pkg))
+                else:
+                    self.feedback.info('Package \'{0}\' already installed, skipping...'.format(pkg))
+            
+            # If installing any packages
+            if _packages:
+                self.feedback.info('Preparing to install packages: {0}'.format(' '.join(_packages)))
+                
+                # Install the packages
+                self.run_command('yum install {0} -y'.format(' '.join(_packages)), stdout=sys.stdout, stderr=sys.stderr)
+                self.feedback.success('Installed all packages!')
             else:
-                self.feedback.info('Package \'{0}\' already installed, skipping...'.format(pkg))
-        
-        # If installing any packages
-        if _packages:
-            self.feedback.info('Preparing to install packages: {0}'.format(' '.join(_packages)))
+                self.feedback.info('All packages already installed...')
+                
+            # Enable the services
+            self.service['nginx'].enable()
+            self.service['php-fpm'].enable()
             
-            # Install the packages
-            self.run_command('yum install {0} -y'.format(' '.join(_packages)), stdout=sys.stdout, stderr=sys.stderr)
-            self.feedback.success('Installed all packages!')
-        else:
-            self.feedback.info('All packages already installed...')
+            # Make any required directories
+            for dir in [
+                '/etc/nginx/sites-available',
+                '/etc/nginx/sites-enabled',
+                '/srv/www'
+            ]:
+                self.mkdir(dir)
+                
+            # Configure NGINX and PHP-FPM
+            self._config_nginx()
+            self._config_phpfpm()
             
-        # Enable the services
-        self.service['nginx'].enable()
-        self.service['php-fpm'].enable()
-        
-        # Make any required directories
-        for dir in [
-            '/etc/nginx/sites-available',
-            '/etc/nginx/sites-enabled',
-            '/srv/www'
-        ]:
-            self.mkdir(dir)
+            # Start the services
+            self.service['php-fpm'].restart()
+            self.service['nginx'].restart()
             
-        # Configure NGINX and PHP-FPM
-        self._config_nginx()
-        self._config_phpfpm()
-        
-        # Start the services
-        self.service['php-fpm'].restart()
-        self.service['nginx'].restart()
-        
-        # Create the setup marker
-        self.mkfile(self.marker, contents='1', overwrite=True)
+            # Create the setup marker
+            self.mkfile(self.marker, contents='1', overwrite=True)
+            
+        # Failed to run installation
+        except Exception as e:
+            return R_FATAL(
+                msg  = 'Failed to install NGINX: {0}'.format(str(e)),
+                code = 500
+            )
         
     def setup(self, args):
         """
@@ -241,11 +271,8 @@ class _NGUtilApp(_NGUtilCommon):
         # Store arguments
         self.args = args
         
-        # Preflight checks
-        self._preflight()
-        
-        # Setup the firewall
-        self._config_firewall([
+        # Firewall parameters
+        fw_params = [
             {
                 'chain': 'INPUT',
                 'params': {
@@ -264,7 +291,19 @@ class _NGUtilApp(_NGUtilCommon):
                     '-j': 'ACCEPT'
                 }
             }
-        ])
+        ]
+        
+        # Preflight checks
+        pre_rsp  = self._preflight()
+        if pre_rsp.fatal:
+            return pre_rsp
+        
+        # Setup the firewall
+        fw_rsp   = self._config_firewall(fw_params)
+        if fw_rsp.fatal:
+            return fw_rsp
         
         # Install required software
-        self._install()
+        inst_rsp = self._install()
+        if inst_rsp.fatal:
+            return inst_rsp
