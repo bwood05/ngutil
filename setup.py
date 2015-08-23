@@ -1,27 +1,9 @@
 #!/usr/bin/python
 from setuptools import setup, find_packages
-from setuptools.command.install import install as _install
 
-# Get the module version
+# ngutil
 from ngutil import __version__
-
-def _post_install():
-    """
-    Post installation setup method.
-    """
-    print 'Post install method run'
-
-class NGUtilInstall(install):
-    """
-    Custom installation wrapper.
-    """
-    def run(self):
-        
-        # Run the built-in installer first
-        _install.run(self)
-
-        # the second parameter, [], can be replaced with a set of parameters if _post_install needs any
-        self.execute(_post_install, [], msg="Running post-installation tasks...")
+from ngutil.setup.install import NGUtilInstall
 
 # Run the setup
 setup(
