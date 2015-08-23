@@ -1,8 +1,27 @@
 #!/usr/bin/python
 from setuptools import setup, find_packages
+from setuptools.command.install import install as _install
 
 # Get the module version
 from ngutil import __version__
+
+def _post_install():
+    """
+    Post installation setup method.
+    """
+    print 'Post install method run'
+
+class NGUtilInstall(install):
+    """
+    Custom installation wrapper.
+    """
+    def run(self):
+        
+        # Run the built-in installer first
+        _install.run(self)
+
+        # the second parameter, [], can be replaced with a set of parameters if _post_install needs any
+        self.execute(_post_install, [], msg="Running post-installation tasks...")
 
 # Run the setup
 setup(
@@ -20,8 +39,11 @@ setup(
     entry_points     = {
           'console_scripts': [
               'ngutil = ngutil:cli'
-          ]
-      },
+        ]
+    },
+    cmdclass         = {
+        'install': NGUtilInstall
+    },
     classifiers      = [
         'Development Status :: 3 - Alpha',
         'Environment :: Console',
@@ -34,5 +56,6 @@ setup(
         'Topic :: System :: Shells',
         'Topic :: Internet :: WWW/HTTP :: Site Management'
     ],
-    include_package_data = True
+    include_package_data = True,
+    
 )
